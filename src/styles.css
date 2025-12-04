@@ -1,1 +1,12 @@
 /* You can add global styles to this file, and also import other style files */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Estilos base para asegurar que la app ocupe toda la pantalla */
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: 'Inter', sans-serif; /* Fuente moderna recomendada */
+  background-color: #f3f4f6; /* Un gris muy suave de fondo por defecto */
+}
