@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router'; // <--- Importamos el Router
 
 @Component({
   selector: 'app-landing',
@@ -11,15 +12,17 @@ import { FormsModule } from '@angular/forms';
 })
 export class LandingComponent {
   loginData = { email: '', password: '' };
-  
-  // Variable para controlar si se ve la contraseña
   showPassword = false;
 
+  // Inyectamos el Router en el constructor
+  constructor(private router: Router) {}
+
   onLogin() { 
-    console.log('Login:', this.loginData); 
+    console.log('Login:', this.loginData);
+    // Redirigimos al dashboard al hacer click en Entrar
+    this.router.navigate(['/dashboard']); 
   }
 
-  // Función para alternar el estado
   togglePasswordVisibility() {
     this.showPassword = !this.showPassword;
   }
