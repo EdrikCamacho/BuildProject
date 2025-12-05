@@ -5,41 +5,59 @@
       <p class="text-brand-text-muted mt-2">Únete a BuildProject</p>
     </div>
 
-    <form (ngSubmit)="onRegister()" class="space-y-5">
+    <form (ngSubmit)="onRegister()" class="space-y-5" novalidate>
+      
       <div>
-        <label class="block text-sm font-medium text-brand-text-muted">Nombre Completo</label>
-        <input type="text" [(ngModel)]="registerData.name" name="name" class="mt-1 block w-full px-4 py-3 bg-brand-black border border-brand-surface-light rounded-xl text-white focus:ring-2 focus:ring-brand-primary focus:border-transparent outline-none placeholder-gray-600" placeholder="Tu nombre">
+        <label class="block text-sm font-medium text-brand-text-muted mb-1">Nombre Completo</label>
+        <input type="text" [(ngModel)]="registerData.name" name="name" 
+          class="block w-full px-4 py-3 bg-brand-black border rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent placeholder-gray-600 transition-colors"
+          [class.border-red-500]="submitted && !registerData.name"
+          [class.border-brand-surface-light]="!submitted || registerData.name"
+          placeholder="Tu nombre">
+        <p *ngIf="submitted && !registerData.name" class="text-red-500 text-xs mt-1">¿Cómo te llamamos?</p>
       </div>
+
       <div>
-        <label class="block text-sm font-medium text-brand-text-muted">Email</label>
-        <input type="email" [(ngModel)]="registerData.email" name="email" class="mt-1 block w-full px-4 py-3 bg-brand-black border border-brand-surface-light rounded-xl text-white focus:ring-2 focus:ring-brand-primary focus:border-transparent outline-none placeholder-gray-600" placeholder="tu@email.com">
+        <label class="block text-sm font-medium text-brand-text-muted mb-1">Email</label>
+        <input type="email" [(ngModel)]="registerData.email" name="email" 
+          class="block w-full px-4 py-3 bg-brand-black border rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent placeholder-gray-600 transition-colors"
+          [class.border-red-500]="submitted && !registerData.email"
+          [class.border-brand-surface-light]="!submitted || registerData.email"
+          placeholder="tu@email.com">
+        <p *ngIf="submitted && !registerData.email" class="text-red-500 text-xs mt-1">El email es obligatorio.</p>
       </div>
       
       <div>
-        <label class="block text-sm font-medium text-brand-text-muted">Contraseña</label>
-        <div class="relative mt-1">
-          <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="registerData.password" name="password" class="block w-full px-4 py-3 bg-brand-black border border-brand-surface-light rounded-xl text-white focus:ring-2 focus:ring-brand-primary focus:border-transparent outline-none pr-10 placeholder-gray-600" placeholder="••••••••">
+        <label class="block text-sm font-medium text-brand-text-muted mb-1">Contraseña</label>
+        <div class="relative">
+          <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="registerData.password" name="password" 
+            class="block w-full px-4 py-3 bg-brand-black border rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent pr-10 placeholder-gray-600 transition-colors"
+            [class.border-red-500]="submitted && (!registerData.password || registerData.password.length < 6)"
+            [class.border-brand-surface-light]="!submitted || (registerData.password && registerData.password.length >= 6)"
+            placeholder="••••••••">
           <button type="button" (click)="togglePassword()" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-white focus:outline-none">
              <svg *ngIf="!showPassword" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" /></svg>
              <svg *ngIf="showPassword" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
           </button>
         </div>
+        <p *ngIf="submitted && !registerData.password" class="text-red-500 text-xs mt-1">La contraseña es obligatoria.</p>
+        <p *ngIf="submitted && registerData.password && registerData.password.length < 6" class="text-red-500 text-xs mt-1">Mínimo 6 caracteres.</p>
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-brand-text-muted">Confirmar Contraseña</label>
-        <div class="relative mt-1">
+        <label class="block text-sm font-medium text-brand-text-muted mb-1">Confirmar Contraseña</label>
+        <div class="relative">
           <input [type]="showConfirmPassword ? 'text' : 'password'" [(ngModel)]="registerData.confirmPassword" name="confirmPassword" 
-            class="block w-full px-4 py-3 bg-brand-black border rounded-xl text-white focus:ring-2 focus:ring-brand-primary focus:border-transparent outline-none pr-10 transition-colors placeholder-gray-600"
-            [class.border-red-500]="passwordsDoNotMatch"
-            [class.border-brand-surface-light]="!passwordsDoNotMatch"
+            class="block w-full px-4 py-3 bg-brand-black border rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent pr-10 transition-colors placeholder-gray-600"
+            [class.border-red-500]="submitted && registerData.password !== registerData.confirmPassword"
+            [class.border-brand-surface-light]="!submitted || registerData.password === registerData.confirmPassword"
             placeholder="Repite tu contraseña">
           <button type="button" (click)="toggleConfirmPassword()" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-white focus:outline-none">
              <svg *ngIf="!showConfirmPassword" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" /></svg>
              <svg *ngIf="showConfirmPassword" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
           </button>
         </div>
-        <p *ngIf="passwordsDoNotMatch" class="text-red-500 text-xs mt-1 animate-pulse">Las contraseñas no coinciden.</p>
+        <p *ngIf="submitted && registerData.password !== registerData.confirmPassword" class="text-red-500 text-xs mt-1 animate-pulse">Las contraseñas no coinciden.</p>
       </div>
 
       <button type="submit" class="w-full py-3 px-4 bg-brand-primary hover:bg-blue-600 text-white font-bold rounded-xl transition-colors shadow-lg shadow-blue-900/20">

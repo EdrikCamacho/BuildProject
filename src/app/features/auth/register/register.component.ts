@@ -10,45 +10,44 @@ import { Router, RouterLink } from '@angular/router';
   templateUrl: './register.component.html'
 })
 export class RegisterComponent {
-  registerData = { 
-    name: '', 
-    email: '', 
-    password: '',
-    confirmPassword: '' // Nuevo campo
-  };
-
-  // Estado visual
+  registerData = { name: '', email: '', password: '', confirmPassword: '' };
+  
   showPassword = false;
   showConfirmPassword = false;
-  passwordsDoNotMatch = false; // Para mostrar el error rojo
+  
+  // Bandera de envío
+  submitted = false;
 
   constructor(private router: Router) {}
 
   onRegister() {
-    // 1. Reiniciar errores
-    this.passwordsDoNotMatch = false;
+    this.submitted = true;
 
-    // 2. Validación básica
-    if (this.registerData.password !== this.registerData.confirmPassword) {
-      this.passwordsDoNotMatch = true;
-      return; // Detenemos el proceso si no coinciden
+    // 1. Validar campos vacíos
+    if (!this.registerData.name || !this.registerData.email || !this.registerData.password || !this.registerData.confirmPassword) {
+      return;
     }
 
-    if (!this.registerData.password || !this.registerData.email) {
-        return; // Validación simple de campos vacíos
+    // 2. Validar Email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(this.registerData.email)) {
+      return; 
+    }
+
+    // 3. Validar longitud contraseña (min 6)
+    if (this.registerData.password.length < 6) {
+      return;
+    }
+
+    // 4. Validar coincidencia
+    if (this.registerData.password !== this.registerData.confirmPassword) {
+      return;
     }
 
     console.log('Registrando:', this.registerData);
-    // 3. Si todo está bien, avanzamos
     this.router.navigate(['/onboarding']);
   }
 
-  // Funciones para los ojitos
-  togglePassword() {
-    this.showPassword = !this.showPassword;
-  }
-
-  toggleConfirmPassword() {
-    this.showConfirmPassword = !this.showConfirmPassword;
-  }
+  togglePassword() { this.showPassword = !this.showPassword; }
+  toggleConfirmPassword() { this.showConfirmPassword = !this.showConfirmPassword; }
 }

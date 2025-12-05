@@ -9,3 +9,26 @@ html, body {
   background-color: #09090b; /* Color brand-black */
   color: #f4f4f5; /* Color brand-text */
 }
+
+/* =========================================
+   SOLUCIÓN PARA EL AUTOCOMPLETE (AUTOFILL)
+   ========================================= */
+/* Esto fuerza al navegador a "pintar" el fondo del input usando una sombra interior
+   del mismo color que tu fondo (#09090b), tapando el color blanco por defecto. */
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+    /* El color #09090b coincide con tu clase 'bg-brand-black' */
+    -webkit-box-shadow: 0 0 0 30px #09090b inset !important;
+    
+    /* Forzamos el color del texto a blanco/gris claro */
+    -webkit-text-fill-color: #f4f4f5 !important;
+    
+    /* Evita transiciones de fondo no deseadas */
+    transition: background-color 5000s ease-in-out 0s;
+    
+    /* Mantiene el borde del color correcto si lo hubiera */
+    caret-color: #f4f4f5;
+}
