@@ -1,0 +1,133 @@
+<div class="flex h-screen bg-brand-black font-sans text-brand-text">
+
+  <aside class="hidden md:flex flex-col w-64 bg-brand-surface border-r border-brand-surface-light text-white p-6 justify-between">
+    <div>
+      <div class="mb-10 flex items-center gap-2 text-brand-primary font-bold text-2xl">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
+        <span>BUILD<span class="text-white">PROJECT</span></span>
+      </div>
+      
+      <nav class="space-y-2">
+        <a routerLink="/dashboard" class="flex items-center gap-3 p-3 text-brand-text-muted hover:text-white hover:bg-brand-surface-light rounded-xl transition-colors">
+          <span>🏋️</span> Mis Rutinas
+        </a>
+        <a routerLink="/profile" class="flex items-center gap-3 p-3 bg-brand-primary/10 text-brand-primary rounded-xl font-medium border border-brand-primary/20">
+          <span>👤</span> Perfil
+        </a>
+      </nav>
+    </div>
+    <div class="text-xs text-brand-text-muted">v1.3.2 Analytics</div>
+  </aside>
+
+  <main class="flex-1 flex flex-col h-full overflow-hidden relative bg-brand-black">
+    
+    <header class="md:hidden bg-brand-surface border-b border-brand-surface-light p-4 flex justify-between items-center z-10">
+      <h1 class="font-bold text-xl text-white">Estadísticas</h1>
+      <div class="w-8 h-8 bg-brand-primary/20 rounded-full flex items-center justify-center text-brand-primary font-bold text-sm">
+        {{ user.avatarLetter }}
+      </div>
+    </header>
+
+    <div class="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8">
+      
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <div>
+          <h2 class="text-2xl font-bold text-white">{{ user.name }}</h2>
+          <p class="text-brand-text-muted text-sm">{{ user.username }}</p>
+        </div>
+        
+        <div class="flex bg-brand-surface p-1 rounded-xl border border-brand-surface-light w-full md:w-auto">
+          <button *ngFor="let p of periods"
+                  (click)="setPeriod(p)"
+                  class="flex-1 md:flex-none px-4 py-1.5 rounded-lg text-xs font-medium transition-all"
+                  [ngClass]="currentPeriod === p ? 'bg-brand-surface-light text-white shadow-sm ring-1 ring-white/10' : 'text-brand-text-muted hover:text-white'">
+            {{ p }}
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+
+        <div class="bg-brand-surface p-6 rounded-2xl border border-brand-surface-light relative overflow-hidden group hover:border-brand-primary/30 transition-colors">
+          <div class="flex justify-between items-start mb-6">
+            <div>
+              <p class="text-brand-text-muted text-[10px] uppercase tracking-wider font-bold mb-1">Volumen Total</p>
+              <h3 class="text-3xl font-bold text-white tracking-tight">{{ currentStats.volume }}</h3>
+            </div>
+            <div class="p-2 bg-brand-primary/10 rounded-lg text-brand-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+            </div>
+          </div>
+          
+          <div class="h-24 flex items-end gap-2 md:gap-4">
+            <div *ngFor="let h of currentStats.volumeTrend"
+                 class="flex-1 bg-brand-primary/20 rounded-t-md hover:bg-brand-primary transition-all duration-300 cursor-pointer relative group/bar"
+                 [style.height.%]="h">
+                 <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-brand-black border border-brand-surface-light text-white text-[10px] rounded opacity-0 group-hover/bar:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                   {{ h }}%
+                 </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-brand-surface p-6 rounded-2xl border border-brand-surface-light relative overflow-hidden group hover:border-purple-500/30 transition-colors">
+          <div class="flex justify-between items-start mb-6">
+            <div>
+              <p class="text-brand-text-muted text-[10px] uppercase tracking-wider font-bold mb-1">Series Totales</p>
+              <h3 class="text-3xl font-bold text-white tracking-tight">{{ currentStats.sets }}</h3>
+            </div>
+            <div class="p-2 bg-purple-500/10 rounded-lg text-purple-500">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+            </div>
+          </div>
+          
+          <div class="h-24 flex items-end gap-2 md:gap-4">
+            <div *ngFor="let h of currentStats.setsTrend"
+                 class="flex-1 bg-purple-500/20 rounded-t-md hover:bg-purple-500 transition-all duration-300 cursor-pointer relative group/bar"
+                 [style.height.%]="h">
+                 <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-brand-black border border-brand-surface-light text-white text-[10px] rounded opacity-0 group-hover/bar:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                   {{ h }} sets
+                 </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <h3 class="text-lg font-bold text-white mb-4 px-1">Herramientas</h3>
+      <div class="space-y-3">
+        <a *ngFor="let item of menuItems" [routerLink]="item.route" class="group flex items-center justify-between p-4 bg-brand-surface border border-brand-surface-light rounded-xl hover:border-brand-primary/50 transition-all cursor-pointer">
+          <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-lg bg-brand-black flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+              <span *ngIf="item.icon !== 'anatomy'">{{ item.icon }}</span>
+              <svg *ngIf="item.icon === 'anatomy'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-brand-primary"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
+            </div>
+            <div>
+              <div class="font-medium text-white group-hover:text-brand-primary transition-colors">{{ item.title }}</div>
+              <div class="text-xs text-brand-text-muted">{{ item.desc }}</div>
+            </div>
+          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-brand-text-muted group-hover:translate-x-1 transition-transform"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+        </a>
+      </div>
+
+      <button class="w-full mt-8 p-4 text-red-500 font-medium text-sm hover:bg-red-500/10 rounded-xl transition-colors flex items-center justify-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" /></svg>
+        Cerrar Sesión
+      </button>
+
+    </div>
+  </main>
+
+  <nav class="md:hidden fixed bottom-0 w-full bg-brand-surface border-t border-brand-surface-light flex justify-around items-center py-3 z-30 pb-safe">
+    <a routerLink="/dashboard" class="flex flex-col items-center text-brand-text-muted hover:text-white">
+      <span class="text-xl">🏋️</span>
+      <span class="text-[10px] font-medium mt-1">Rutinas</span>
+    </a>
+    <a routerLink="/profile" class="flex flex-col items-center text-brand-primary">
+      <span class="text-xl">👤</span>
+      <span class="text-[10px] font-medium mt-1">Perfil</span>
+    </a>
+  </nav>
+
+</div>
