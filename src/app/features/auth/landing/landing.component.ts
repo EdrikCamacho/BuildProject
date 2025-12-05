@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms'; // Necesario para los inputs
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-landing',
@@ -10,13 +10,17 @@ import { FormsModule } from '@angular/forms'; // Necesario para los inputs
   styles: []
 })
 export class LandingComponent {
-  loginData = {
-    email: '',
-    password: ''
-  };
+  loginData = { email: '', password: '' };
+  
+  // Variable para controlar si se ve la contraseña
+  showPassword = false;
 
-  onLogin() {
-    console.log('Iniciando sesión con:', this.loginData);
-    // Aquí conectaremos con el backend más adelante
+  onLogin() { 
+    console.log('Login:', this.loginData); 
+  }
+
+  // Función para alternar el estado
+  togglePasswordVisibility() {
+    this.showPassword = !this.showPassword;
   }
 }
