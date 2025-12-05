@@ -1,0 +1,98 @@
+<div class="min-h-screen bg-slate-900 text-white flex flex-col justify-center items-center p-6 font-sans relative overflow-hidden">
+  
+  <div class="absolute top-0 left-0 w-full h-2 bg-slate-800">
+    <div class="h-full bg-blue-500 transition-all duration-500" [style.width.%]="(currentStep / 3) * 100"></div>
+  </div>
+
+  <div class="max-w-md w-full text-center space-y-8 animate-fade-in">
+    
+    <div *ngIf="currentStep === 1">
+      <h2 class="text-3xl font-bold mb-2">¿Cuál es tu género?</h2>
+      <p class="text-slate-400 mb-8">Esto nos ayuda a calibrar métricas corporales.</p>
+      
+      <div class="grid grid-cols-2 gap-4">
+        <button (click)="selectGender('male')" 
+          [class]="userData.gender === 'male' ? 'bg-blue-600 border-blue-500' : 'bg-slate-800 border-slate-700 hover:bg-slate-700'"
+          class="p-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-3">
+          <span class="text-4xl">👨</span>
+          <span class="font-semibold">Masculino</span>
+        </button>
+        
+        <button (click)="selectGender('female')" 
+          [class]="userData.gender === 'female' ? 'bg-pink-600 border-pink-500' : 'bg-slate-800 border-slate-700 hover:bg-slate-700'"
+          class="p-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-3">
+          <span class="text-4xl">👩</span>
+          <span class="font-semibold">Femenino</span>
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="currentStep === 2">
+      <h2 class="text-3xl font-bold mb-2">Tus Medidas</h2>
+      <p class="text-slate-400 mb-8">Podrás actualizarlas en cualquier momento.</p>
+
+      <div class="space-y-6">
+        <div>
+          <label class="block text-sm text-slate-400 mb-2">Peso Corporal (kg)</label>
+          <input type="number" [(ngModel)]="userData.weight" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-4 text-center text-2xl font-bold focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <div>
+          <label class="block text-sm text-slate-400 mb-2">Altura (cm)</label>
+          <input type="number" [(ngModel)]="userData.height" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-4 text-center text-2xl font-bold focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="currentStep === 3">
+      <h2 class="text-3xl font-bold mb-2">Objetivo Principal</h2>
+      <p class="text-slate-400 mb-8">Adaptaremos las rutinas a tu meta.</p>
+
+      <div class="space-y-3">
+        <button (click)="selectGoal('hypertrophy')" 
+          [class]="userData.goal === 'hypertrophy' ? 'bg-blue-600' : 'bg-slate-800 hover:bg-slate-700'"
+          class="w-full p-4 rounded-xl text-left flex items-center gap-4 transition-colors">
+          <span class="text-2xl">💪</span>
+          <div>
+            <div class="font-bold">Hipertrofia</div>
+            <div class="text-xs text-slate-300">Ganar masa muscular</div>
+          </div>
+        </button>
+
+        <button (click)="selectGoal('strength')" 
+          [class]="userData.goal === 'strength' ? 'bg-blue-600' : 'bg-slate-800 hover:bg-slate-700'"
+          class="w-full p-4 rounded-xl text-left flex items-center gap-4 transition-colors">
+          <span class="text-2xl">🏋️</span>
+          <div>
+            <div class="font-bold">Fuerza</div>
+            <div class="text-xs text-slate-300">Aumentar peso levantado</div>
+          </div>
+        </button>
+
+        <button (click)="selectGoal('endurance')" 
+          [class]="userData.goal === 'endurance' ? 'bg-blue-600' : 'bg-slate-800 hover:bg-slate-700'"
+          class="w-full p-4 rounded-xl text-left flex items-center gap-4 transition-colors">
+          <span class="text-2xl">🏃</span>
+          <div>
+            <div class="font-bold">Resistencia</div>
+            <div class="text-xs text-slate-300">Mejorar condición física</div>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <div class="flex gap-4 mt-8 pt-4">
+      <button *ngIf="currentStep > 1" (click)="prevStep()" class="flex-1 py-3 bg-slate-800 rounded-lg text-slate-300 font-medium">
+        Atrás
+      </button>
+      
+      <button *ngIf="currentStep < 3" (click)="nextStep()" class="flex-1 py-3 bg-white text-slate-900 rounded-lg font-bold hover:bg-gray-200">
+        Siguiente
+      </button>
+
+      <button *ngIf="currentStep === 3" (click)="finishOnboarding()" class="flex-1 py-3 bg-blue-500 text-white rounded-lg font-bold hover:bg-blue-600 shadow-lg shadow-blue-500/30">
+        Finalizar
+      </button>
+    </div>
+
+  </div>
+</div>
