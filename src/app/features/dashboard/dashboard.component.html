@@ -9,7 +9,7 @@
       
       <nav class="space-y-2">
         <a routerLink="/dashboard" class="flex items-center gap-3 p-3 bg-brand-primary/10 text-brand-primary rounded-xl font-medium border border-brand-primary/20">
-          <span>🏋️</span> Mis Rutinas
+          <span>🏋️</span> Entrenar
         </a>
         <a routerLink="/profile" class="flex items-center gap-3 p-3 text-brand-text-muted hover:text-white hover:bg-brand-surface-light rounded-xl transition-colors">
           <span>👤</span> Perfil
@@ -21,7 +21,7 @@
   <main class="flex-1 flex flex-col h-full overflow-hidden relative bg-brand-black">
     
     <header class="md:hidden bg-brand-surface border-b border-brand-surface-light p-4 flex justify-between items-center z-10">
-      <h1 class="font-bold text-xl text-white">Mis Rutinas</h1>
+      <h1 class="font-bold text-xl text-white">Entrenar</h1>
       <div class="w-8 h-8 bg-brand-primary/20 rounded-full flex items-center justify-center text-brand-primary font-bold border border-brand-primary/30">
         {{ userName.charAt(0) }}
       </div>
@@ -31,34 +31,43 @@
       
       <div class="flex justify-between items-end mb-8">
         <div>
-          <h2 class="text-3xl font-bold text-white">Entrenar</h2>
-          <p class="text-brand-text-muted mt-1">Gestiona tus rutinas o crea una nueva.</p>
+          <h2 class="text-3xl font-bold text-white">Hola, {{ userName }}</h2>
+          <p class="text-brand-text-muted mt-1">¿Listo para romper récords hoy?</p>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        <button (click)="createRoutine()" class="group relative p-6 bg-brand-surface border border-brand-surface-light rounded-2xl text-left hover:border-brand-primary/50 transition-all shadow-lg hover:shadow-brand-primary/5">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        
+        <button (click)="startEmptyWorkout()" class="group relative p-6 bg-brand-primary/10 border border-brand-primary/50 rounded-2xl text-left hover:bg-brand-primary hover:border-brand-primary transition-all shadow-lg hover:shadow-brand-primary/20">
+          <div class="absolute top-4 right-4 text-brand-primary group-hover:text-white transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          </div>
+          <span class="block text-3xl mb-2">⚡</span>
+          <h3 class="text-lg font-bold text-white mb-1">Entrenamiento Vacío</h3>
+          <p class="text-xs text-brand-text-muted group-hover:text-blue-100">Empieza sin rutina y agrega ejercicios sobre la marcha.</p>
+        </button>
+
+        <button (click)="createRoutine()" class="group relative p-6 bg-brand-surface border border-brand-surface-light rounded-2xl text-left hover:border-brand-primary/50 transition-all shadow-lg">
           <div class="absolute top-4 right-4 text-brand-text-muted group-hover:text-brand-primary transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
           </div>
           <span class="block text-2xl mb-2">📝</span>
           <h3 class="text-lg font-bold text-white group-hover:text-brand-primary transition-colors">Crear Rutina</h3>
-          <p class="text-sm text-brand-text-muted">Diseña tu propia rutina desde cero seleccionando ejercicios.</p>
+          <p class="text-xs text-brand-text-muted">Diseña tu plan personalizado.</p>
         </button>
 
-        <button (click)="createWithAI()" class="group relative p-6 bg-brand-surface border border-brand-surface-light rounded-2xl text-left hover:border-purple-500/50 transition-all shadow-lg hover:shadow-purple-500/5">
+        <button (click)="createWithAI()" class="group relative p-6 bg-brand-surface border border-brand-surface-light rounded-2xl text-left hover:border-purple-500/50 transition-all shadow-lg">
           <div class="absolute top-4 right-4 text-brand-text-muted group-hover:text-purple-400 transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" /></svg>
           </div>
           <span class="block text-2xl mb-2">✨</span>
           <h3 class="text-lg font-bold text-white group-hover:text-purple-400 transition-colors">Generar con IA</h3>
-          <p class="text-sm text-brand-text-muted">Deja que nuestra IA cree la rutina perfecta según tus objetivos.</p>
+          <p class="text-xs text-brand-text-muted">La rutina perfecta en segundos.</p>
         </button>
       </div>
 
       <h3 class="text-xl font-bold text-white mb-4">Mis Rutinas</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        
         <div *ngFor="let routine of routines" class="bg-brand-surface border border-brand-surface-light p-5 rounded-xl hover:border-brand-primary/30 transition-colors cursor-pointer group">
           <div class="flex justify-between items-start mb-4">
             <div class="bg-brand-primary/10 p-2 rounded-lg text-brand-primary group-hover:bg-brand-primary group-hover:text-white transition-colors">
@@ -66,17 +75,14 @@
             </div>
             <span class="text-xs text-brand-text-muted">{{ routine.lastPerformed }}</span>
           </div>
-          
           <h4 class="text-lg font-bold text-white mb-1">{{ routine.name }}</h4>
           <p class="text-sm text-brand-text-muted mb-4">{{ routine.exercisesCount }} Ejercicios</p>
-          
           <div class="flex flex-wrap gap-2">
             <span *ngFor="let tag of routine.tags" class="text-[10px] px-2 py-1 rounded-md bg-brand-surface-light text-brand-text-muted border border-brand-surface-light/50">
               {{ tag }}
             </span>
           </div>
         </div>
-
       </div>
 
     </div>
@@ -85,7 +91,7 @@
   <nav class="md:hidden fixed bottom-0 w-full bg-brand-surface border-t border-brand-surface-light flex justify-around items-center py-3 z-30 pb-safe">
     <a routerLink="/dashboard" class="flex flex-col items-center text-brand-primary">
       <span class="text-xl">🏋️</span>
-      <span class="text-[10px] font-medium mt-1">Rutinas</span>
+      <span class="text-[10px] font-medium mt-1">Entrenar</span>
     </a>
     <a routerLink="/profile" class="flex flex-col items-center text-brand-text-muted hover:text-white">
       <span class="text-xl">👤</span>

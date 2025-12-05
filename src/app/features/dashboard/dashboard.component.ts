@@ -12,7 +12,6 @@ import { RouterLink } from '@angular/router';
 export class DashboardComponent {
   userName = 'Atleta';
 
-  // Datos simulados de rutinas existentes
   routines = [
     {
       id: 1,
@@ -37,13 +36,17 @@ export class DashboardComponent {
     }
   ];
 
+  // NUEVA FUNCIÓN
+  startEmptyWorkout() {
+    console.log('Iniciando entrenamiento vacío...');
+    // Aquí redirigiremos al tracker en el futuro
+  }
+
   createRoutine() {
     console.log('Navegar a crear rutina manual');
-    // Aquí conectaremos con el componente de crear rutina más adelante
   }
 
   createWithAI() {
     console.log('Abrir modal de IA');
-    // Aquí irá la integración futura con el backend de IA
   }
 }
