@@ -10,21 +10,40 @@ import { RouterLink } from '@angular/router';
   styles: []
 })
 export class DashboardComponent {
-  // Datos simulados para visualizar la interfaz
   userName = 'Atleta';
-  
-  weeklyWorkouts = [
-    { day: 'L', completed: true },
-    { day: 'M', completed: true },
-    { day: 'X', completed: false },
-    { day: 'J', completed: true },
-    { day: 'V', completed: false },
-    { day: 'S', completed: false },
-    { day: 'D', completed: false },
+
+  // Datos simulados de rutinas existentes
+  routines = [
+    {
+      id: 1,
+      name: 'Push Day - Hipertrofia',
+      exercisesCount: 6,
+      lastPerformed: 'Hace 2 días',
+      tags: ['Pecho', 'Hombro', 'Tríceps']
+    },
+    {
+      id: 2,
+      name: 'Pull Day - Fuerza',
+      exercisesCount: 5,
+      lastPerformed: 'Ayer',
+      tags: ['Espalda', 'Bíceps']
+    },
+    {
+      id: 3,
+      name: 'Leg Day Killer',
+      exercisesCount: 7,
+      lastPerformed: 'Hace 5 días',
+      tags: ['Piernas', 'Glúteos']
+    }
   ];
 
-  recentActivity = [
-    { title: 'Push Day A', date: 'Hoy', duration: '45 min', volume: '3,240 kg' },
-    { title: 'Leg Day', date: 'Ayer', duration: '60 min', volume: '5,100 kg' },
-  ];
+  createRoutine() {
+    console.log('Navegar a crear rutina manual');
+    // Aquí conectaremos con el componente de crear rutina más adelante
+  }
+
+  createWithAI() {
+    console.log('Abrir modal de IA');
+    // Aquí irá la integración futura con el backend de IA
+  }
 }

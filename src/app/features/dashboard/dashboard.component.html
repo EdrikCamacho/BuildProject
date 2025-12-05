@@ -9,99 +9,89 @@
       
       <nav class="space-y-2">
         <a routerLink="/dashboard" class="flex items-center gap-3 p-3 bg-brand-primary/10 text-brand-primary rounded-xl font-medium border border-brand-primary/20">
-          <span>🏠</span> Dashboard
-        </a>
-        <a routerLink="/workouts" class="flex items-center gap-3 p-3 text-brand-text-muted hover:text-white hover:bg-brand-surface-light rounded-xl transition-colors">
-          <span>💪</span> Rutinas
+          <span>🏋️</span> Mis Rutinas
         </a>
         <a routerLink="/analytics" class="flex items-center gap-3 p-3 text-brand-text-muted hover:text-white hover:bg-brand-surface-light rounded-xl transition-colors">
-          <span>📈</span> Progreso
+          <span>👤</span> Perfil
         </a>
       </nav>
     </div>
-    <div class="text-xs text-brand-text-muted">v1.0.0</div>
+    <div class="text-xs text-brand-text-muted">v1.2.0 Routines</div>
   </aside>
 
   <main class="flex-1 flex flex-col h-full overflow-hidden relative bg-brand-black">
     
     <header class="md:hidden bg-brand-surface border-b border-brand-surface-light p-4 flex justify-between items-center z-10">
-      <h1 class="font-bold text-xl text-white">Dashboard</h1>
+      <h1 class="font-bold text-xl text-white">Mis Rutinas</h1>
       <div class="w-8 h-8 bg-brand-primary/20 rounded-full flex items-center justify-center text-brand-primary font-bold border border-brand-primary/30">
         {{ userName.charAt(0) }}
       </div>
     </header>
 
     <div class="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8">
+      
       <div class="flex justify-between items-end mb-8">
         <div>
-          <p class="text-brand-text-muted text-sm">Bienvenido de vuelta,</p>
-          <h2 class="text-3xl font-bold text-white">{{ userName }}</h2>
+          <h2 class="text-3xl font-bold text-white">Entrenar</h2>
+          <p class="text-brand-text-muted mt-1">Gestiona tus rutinas o crea una nueva.</p>
         </div>
-        <button class="hidden md:block bg-brand-primary hover:bg-blue-600 text-white px-6 py-2 rounded-xl font-medium shadow-lg shadow-blue-900/30 transition-transform hover:-translate-y-1">
-          + Iniciar Entrenamiento
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <button (click)="createRoutine()" class="group relative p-6 bg-brand-surface border border-brand-surface-light rounded-2xl text-left hover:border-brand-primary/50 transition-all shadow-lg hover:shadow-brand-primary/5">
+          <div class="absolute top-4 right-4 text-brand-text-muted group-hover:text-brand-primary transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+          </div>
+          <span class="block text-2xl mb-2">📝</span>
+          <h3 class="text-lg font-bold text-white group-hover:text-brand-primary transition-colors">Crear Rutina</h3>
+          <p class="text-sm text-brand-text-muted">Diseña tu propia rutina desde cero seleccionando ejercicios.</p>
+        </button>
+
+        <button (click)="createWithAI()" class="group relative p-6 bg-brand-surface border border-brand-surface-light rounded-2xl text-left hover:border-purple-500/50 transition-all shadow-lg hover:shadow-purple-500/5">
+          <div class="absolute top-4 right-4 text-brand-text-muted group-hover:text-purple-400 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" /></svg>
+          </div>
+          <span class="block text-2xl mb-2">✨</span>
+          <h3 class="text-lg font-bold text-white group-hover:text-purple-400 transition-colors">Generar con IA</h3>
+          <p class="text-sm text-brand-text-muted">Deja que nuestra IA cree la rutina perfecta según tus objetivos.</p>
         </button>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-brand-surface p-6 rounded-2xl border border-brand-surface-light md:col-span-2">
-          <h3 class="font-semibold text-brand-text-muted mb-4">Esta Semana</h3>
-          <div class="flex justify-between items-center">
-            <div *ngFor="let day of weeklyWorkouts" class="flex flex-col items-center gap-2">
-              <div class="w-8 h-12 md:w-10 md:h-16 rounded-full flex items-center justify-center text-xs md:text-sm font-bold transition-all border"
-                   [ngClass]="day.completed ? 'bg-brand-primary border-brand-primary text-white shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'bg-transparent border-brand-surface-light text-brand-text-muted'">
-                <span *ngIf="day.completed">✓</span>
-              </div>
-              <span class="text-xs text-brand-text-muted">{{ day.day }}</span>
+      <h3 class="text-xl font-bold text-white mb-4">Mis Rutinas</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        
+        <div *ngFor="let routine of routines" class="bg-brand-surface border border-brand-surface-light p-5 rounded-xl hover:border-brand-primary/30 transition-colors cursor-pointer group">
+          <div class="flex justify-between items-start mb-4">
+            <div class="bg-brand-primary/10 p-2 rounded-lg text-brand-primary group-hover:bg-brand-primary group-hover:text-white transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3" /></svg>
             </div>
+            <span class="text-xs text-brand-text-muted">{{ routine.lastPerformed }}</span>
+          </div>
+          
+          <h4 class="text-lg font-bold text-white mb-1">{{ routine.name }}</h4>
+          <p class="text-sm text-brand-text-muted mb-4">{{ routine.exercisesCount }} Ejercicios</p>
+          
+          <div class="flex flex-wrap gap-2">
+            <span *ngFor="let tag of routine.tags" class="text-[10px] px-2 py-1 rounded-md bg-brand-surface-light text-brand-text-muted border border-brand-surface-light/50">
+              {{ tag }}
+            </span>
           </div>
         </div>
 
-        <div class="bg-brand-primary p-6 rounded-2xl shadow-xl shadow-blue-900/20 relative overflow-hidden">
-          <div class="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
-          <h3 class="text-blue-100 text-sm font-medium mb-1">Volumen Semanal</h3>
-          <p class="text-4xl font-bold mb-4 text-white">12.5k <span class="text-lg text-blue-200 font-normal">kg</span></p>
-          <div class="h-1 w-full bg-black/20 rounded-full overflow-hidden">
-            <div class="h-full bg-white w-3/4"></div>
-          </div>
-          <p class="text-xs text-blue-100 mt-2 text-right">+15% vs semana pasada</p>
-        </div>
       </div>
 
-      <h3 class="font-bold text-xl text-white mb-4">Actividad Reciente</h3>
-      <div class="space-y-4">
-        <div *ngFor="let item of recentActivity" class="bg-brand-surface p-4 rounded-xl border border-brand-surface-light flex justify-between items-center hover:border-brand-primary/50 transition-colors cursor-pointer">
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-brand-surface-light rounded-lg flex items-center justify-center text-2xl">🏋️</div>
-            <div>
-              <h4 class="font-bold text-white">{{ item.title }}</h4>
-              <p class="text-xs text-brand-text-muted">{{ item.date }} • {{ item.duration }}</p>
-            </div>
-          </div>
-          <div class="text-right">
-            <p class="font-bold text-white">{{ item.volume }}</p>
-            <p class="text-xs text-brand-text-muted">Volumen</p>
-          </div>
-        </div>
-      </div>
     </div>
-
-    <button class="md:hidden absolute bottom-20 right-4 w-14 h-14 bg-brand-primary text-white rounded-full shadow-[0_0_20px_rgba(59,130,246,0.6)] flex items-center justify-center text-3xl z-20 hover:scale-105 transition-transform">
-      +
-    </button>
   </main>
 
   <nav class="md:hidden fixed bottom-0 w-full bg-brand-surface border-t border-brand-surface-light flex justify-around items-center py-3 z-30 pb-safe">
     <a routerLink="/dashboard" class="flex flex-col items-center text-brand-primary">
-      <span class="text-xl">🏠</span>
-      <span class="text-[10px] font-medium mt-1">Inicio</span>
-    </a>
-    <a routerLink="/workouts" class="flex flex-col items-center text-brand-text-muted hover:text-white">
-      <span class="text-xl">💪</span>
+      <span class="text-xl">🏋️</span>
       <span class="text-[10px] font-medium mt-1">Rutinas</span>
     </a>
     <a routerLink="/analytics" class="flex flex-col items-center text-brand-text-muted hover:text-white">
-      <span class="text-xl">📈</span>
+      <span class="text-xl">👤</span>
       <span class="text-[10px] font-medium mt-1">Perfil</span>
     </a>
   </nav>
+
 </div>
