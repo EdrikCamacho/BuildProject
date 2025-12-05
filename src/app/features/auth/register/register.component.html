@@ -1,68 +1,55 @@
-<div class="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-6 font-sans">
-  <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
+<div class="min-h-screen bg-brand-black flex flex-col justify-center items-center p-6 font-sans">
+  <div class="max-w-md w-full bg-brand-surface border border-brand-surface-light rounded-2xl shadow-xl p-8">
     <div class="text-center mb-8">
-      <h2 class="text-3xl font-bold text-slate-800">Crea tu cuenta</h2>
-      <p class="text-gray-500 mt-2">Únete a BuildProject</p>
+      <h2 class="text-3xl font-bold text-white">Crea tu cuenta</h2>
+      <p class="text-brand-text-muted mt-2">Únete a BuildProject</p>
     </div>
 
     <form (ngSubmit)="onRegister()" class="space-y-5">
       <div>
-        <label class="block text-sm font-medium text-slate-700">Nombre Completo</label>
-        <input type="text" [(ngModel)]="registerData.name" name="name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Tu nombre">
+        <label class="block text-sm font-medium text-brand-text-muted">Nombre Completo</label>
+        <input type="text" [(ngModel)]="registerData.name" name="name" class="mt-1 block w-full px-4 py-3 bg-brand-black border border-brand-surface-light rounded-xl text-white focus:ring-2 focus:ring-brand-primary focus:border-transparent outline-none placeholder-gray-600" placeholder="Tu nombre">
       </div>
-
       <div>
-        <label class="block text-sm font-medium text-slate-700">Email</label>
-        <input type="email" [(ngModel)]="registerData.email" name="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="tu@email.com">
+        <label class="block text-sm font-medium text-brand-text-muted">Email</label>
+        <input type="email" [(ngModel)]="registerData.email" name="email" class="mt-1 block w-full px-4 py-3 bg-brand-black border border-brand-surface-light rounded-xl text-white focus:ring-2 focus:ring-brand-primary focus:border-transparent outline-none placeholder-gray-600" placeholder="tu@email.com">
       </div>
-
+      
       <div>
-        <label class="block text-sm font-medium text-slate-700">Contraseña</label>
+        <label class="block text-sm font-medium text-brand-text-muted">Contraseña</label>
         <div class="relative mt-1">
-          <input 
-            [type]="showPassword ? 'text' : 'password'" 
-            [(ngModel)]="registerData.password" 
-            name="password" 
-            class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pr-10" 
-            placeholder="••••••••"
-          >
-          <button type="button" (click)="togglePassword()" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none">
-            <svg *ngIf="showPassword" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-            <svg *ngIf="!showPassword" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" /></svg>
+          <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="registerData.password" name="password" class="block w-full px-4 py-3 bg-brand-black border border-brand-surface-light rounded-xl text-white focus:ring-2 focus:ring-brand-primary focus:border-transparent outline-none pr-10 placeholder-gray-600" placeholder="••••••••">
+          <button type="button" (click)="togglePassword()" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-white focus:outline-none">
+             <svg *ngIf="!showPassword" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" /></svg>
+             <svg *ngIf="showPassword" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
           </button>
         </div>
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-slate-700">Confirmar Contraseña</label>
+        <label class="block text-sm font-medium text-brand-text-muted">Confirmar Contraseña</label>
         <div class="relative mt-1">
-          <input 
-            [type]="showConfirmPassword ? 'text' : 'password'" 
-            [(ngModel)]="registerData.confirmPassword" 
-            name="confirmPassword" 
-            class="block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 pr-10 transition-colors"
+          <input [type]="showConfirmPassword ? 'text' : 'password'" [(ngModel)]="registerData.confirmPassword" name="confirmPassword" 
+            class="block w-full px-4 py-3 bg-brand-black border rounded-xl text-white focus:ring-2 focus:ring-brand-primary focus:border-transparent outline-none pr-10 transition-colors placeholder-gray-600"
             [class.border-red-500]="passwordsDoNotMatch"
-            [class.border-gray-300]="!passwordsDoNotMatch"
-            placeholder="Repite tu contraseña"
-          >
-          <button type="button" (click)="toggleConfirmPassword()" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none">
-            <svg *ngIf="showConfirmPassword" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-            <svg *ngIf="!showConfirmPassword" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" /></svg>
+            [class.border-brand-surface-light]="!passwordsDoNotMatch"
+            placeholder="Repite tu contraseña">
+          <button type="button" (click)="toggleConfirmPassword()" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-white focus:outline-none">
+             <svg *ngIf="!showConfirmPassword" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" /></svg>
+             <svg *ngIf="showConfirmPassword" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
           </button>
         </div>
-        <p *ngIf="passwordsDoNotMatch" class="text-red-500 text-xs mt-1 animate-pulse">
-          Las contraseñas no coinciden.
-        </p>
+        <p *ngIf="passwordsDoNotMatch" class="text-red-500 text-xs mt-1 animate-pulse">Las contraseñas no coinciden.</p>
       </div>
 
-      <button type="submit" class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors shadow-md">
+      <button type="submit" class="w-full py-3 px-4 bg-brand-primary hover:bg-blue-600 text-white font-bold rounded-xl transition-colors shadow-lg shadow-blue-900/20">
         Comenzar
       </button>
     </form>
 
     <div class="mt-6 text-center text-sm">
-      <span class="text-gray-500">¿Ya tienes cuenta? </span>
-      <a routerLink="/" class="font-medium text-blue-600 hover:text-blue-500 cursor-pointer">Inicia Sesión</a>
+      <span class="text-brand-text-muted">¿Ya tienes cuenta?</span>
+      <a routerLink="/" class="font-medium text-brand-primary hover:text-blue-400 cursor-pointer ml-1">Inicia Sesión</a>
     </div>
   </div>
 </div>
