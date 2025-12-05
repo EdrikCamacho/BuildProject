@@ -1,0 +1,30 @@
+import { Injectable } from '@angular/core';
+import { Observable, of } from 'rxjs';
+import { Exercise } from '../models/exercise.model';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ExerciseService {
+  // Nuestra base de datos falsa inicial
+  private exercises: Exercise[] = [
+    { id: '1', name: 'Press de Banca', muscle: 'Pecho', equipment: 'Barra' },
+    { id: '2', name: 'Sentadilla', muscle: 'Piernas', equipment: 'Barra' },
+    { id: '3', name: 'Peso Muerto', muscle: 'Espalda', equipment: 'Barra' },
+    { id: '4', name: 'Dominadas', muscle: 'Espalda', equipment: 'Peso Corporal' },
+    { id: '5', name: 'Press Militar', muscle: 'Hombros', equipment: 'Barra' },
+    { id: '6', name: 'Curl de Bíceps', muscle: 'Bíceps', equipment: 'Mancuernas' },
+    { id: '7', name: 'Extensiones de Tríceps', muscle: 'Tríceps', equipment: 'Cables' },
+    { id: '8', name: 'Prensa de Piernas', muscle: 'Piernas', equipment: 'Máquina' },
+    { id: '9', name: 'Crunches', muscle: 'Core', equipment: 'Peso Corporal' },
+    { id: '10', name: 'Remo con Barra', muscle: 'Espalda', equipment: 'Barra' },
+    { id: '11', name: 'Aperturas', muscle: 'Pecho', equipment: 'Mancuernas' },
+    { id: '12', name: 'Zancadas', muscle: 'Piernas', equipment: 'Mancuernas' },
+    { id: '13', name: 'Elevaciones Laterales', muscle: 'Hombros', equipment: 'Mancuernas' },
+    { id: '14', name: 'Jalón al Pecho', muscle: 'Espalda', equipment: 'Cables' },
+  ];
+
+  getExercises(): Observable<Exercise[]> {
+    return of(this.exercises);
+  }
+}
