@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router'; // Router ya estaba importado
 import { ExerciseService } from '../../../core/services/exercise.service';
 import { Exercise, MuscleGroup } from '../../../core/models/exercise.model';
 
@@ -33,7 +33,11 @@ export class ExerciseListComponent implements OnInit {
     ] as MuscleGroup[]
   };
 
-  constructor(private exerciseService: ExerciseService) {}
+  // AQUÍ AGREGAMOS private router: Router
+  constructor(
+    private exerciseService: ExerciseService,
+    private router: Router
+  ) {}
 
   ngOnInit() {
     this.exerciseService.getExercises().subscribe(data => {
@@ -86,7 +90,8 @@ export class ExerciseListComponent implements OnInit {
     this.filterExercises();
   }
 
+  // FUNCIÓN MODIFICADA PARA NAVEGAR
   createCustomExercise() {
-    console.log('Crear ejercicio personalizado...');
+    this.router.navigate(['/exercises/create']);
   }
 }

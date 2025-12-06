@@ -1,0 +1,112 @@
+<div class="flex h-screen bg-brand-black font-sans text-brand-text">
+
+  <aside class="hidden md:flex flex-col w-64 bg-brand-surface border-r border-brand-surface-light text-white p-6 justify-between">
+    <div>
+      <div class="mb-10 flex items-center gap-2 text-brand-primary font-bold text-2xl">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
+        <span>BUILD<span class="text-white">PROJECT</span></span>
+      </div>
+      <nav class="space-y-2">
+        <a routerLink="/dashboard" class="flex items-center gap-3 p-3 text-brand-text-muted hover:text-white hover:bg-brand-surface-light rounded-xl transition-colors">
+          <span>🔥</span> Entrenar
+        </a>
+        <a routerLink="/profile" class="flex items-center gap-3 p-3 bg-brand-primary/10 text-brand-primary rounded-xl font-medium border border-brand-primary/20">
+          <span>👤</span> Perfil
+        </a>
+      </nav>
+    </div>
+  </aside>
+
+  <main class="flex-1 flex flex-col h-full overflow-hidden relative bg-brand-black">
+    
+    <header class="bg-brand-surface border-b border-brand-surface-light p-4 flex items-center justify-between z-10">
+      <div class="flex items-center gap-4">
+        <a routerLink="/exercises" class="text-brand-text-muted hover:text-white transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
+        </a>
+        <h1 class="font-bold text-xl text-white">Crear Ejercicio</h1>
+      </div>
+      <button (click)="saveExercise()" class="text-brand-primary font-bold text-sm px-4 py-2 bg-brand-primary/10 rounded-xl border border-brand-primary/20 hover:bg-brand-primary hover:text-white transition-colors">
+        Guardar
+      </button>
+    </header>
+
+    <div class="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8">
+      <form (ngSubmit)="saveExercise()" class="max-w-2xl mx-auto space-y-6">
+
+        <div>
+          <label for="exerciseName" class="block text-sm font-medium text-brand-text-muted mb-2">Nombre del Ejercicio <span class="text-red-500">*</span></label>
+          <input type="text" id="exerciseName" [(ngModel)]="newExercise.name" name="exerciseName" required
+            class="w-full bg-brand-surface border border-brand-surface-light text-white rounded-xl py-3 px-4 focus:ring-2 focus:ring-brand-primary focus:border-transparent outline-none placeholder-gray-500 transition-all"
+            placeholder="Ej: Press de Banca Inclinado">
+        </div>
+
+        <div>
+          <label for="exerciseType" class="block text-sm font-medium text-brand-text-muted mb-2">Tipo de Ejercicio</label>
+          <input type="text" id="exerciseType" [(ngModel)]="newExercise.type" name="exerciseType" readonly
+            class="w-full bg-brand-surface-light border border-brand-surface-light text-brand-text-muted rounded-xl py-3 px-4 cursor-not-allowed">
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          <div>
+            <label for="primaryMuscle" class="block text-sm font-medium text-brand-text-muted mb-2">Músculo Principal <span class="text-red-500">*</span></label>
+            <select id="primaryMuscle" [(ngModel)]="newExercise.primaryMuscle" name="primaryMuscle" required
+              class="w-full bg-brand-surface border border-brand-surface-light text-white rounded-xl py-3 px-4 focus:ring-2 focus:ring-brand-primary focus:border-transparent outline-none appearance-none transition-all"
+              style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a1a1aa%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em;">
+              <option value="" disabled selected>Selecciona un músculo</option>
+              <option *ngFor="let muscle of muscleGroups.primary" [value]="muscle">{{ muscle }}</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="secondaryMuscle" class="block text-sm font-medium text-brand-text-muted mb-2">Músculo Secundario (Opcional)</label>
+            <select id="secondaryMuscle" [(ngModel)]="newExercise.secondaryMuscle" name="secondaryMuscle"
+              class="w-full bg-brand-surface border border-brand-surface-light text-white rounded-xl py-3 px-4 focus:ring-2 focus:ring-brand-primary focus:border-transparent outline-none appearance-none transition-all"
+              style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a1a1aa%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em;">
+              <option value="" disabled selected>Selecciona un músculo</option>
+              <option value="">Ninguno</option>
+              <option *ngFor="let muscle of muscleGroups.secondary" [value]="muscle">{{ muscle }}</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="equipment" class="block text-sm font-medium text-brand-text-muted mb-2">Equipamiento <span class="text-red-500">*</span></label>
+            <select id="equipment" [(ngModel)]="newExercise.equipment" name="equipment" required
+              class="w-full bg-brand-surface border border-brand-surface-light text-white rounded-xl py-3 px-4 focus:ring-2 focus:ring-brand-primary focus:border-transparent outline-none appearance-none transition-all"
+              style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a1a1aa%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em;">
+              <option value="" disabled selected>Selecciona equipamiento</option>
+              <option *ngFor="let item of equipmentList" [value]="item">{{ item }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label for="notes" class="block text-sm font-medium text-brand-text-muted mb-2">Notas (Opcional)</label>
+          <textarea id="notes" [(ngModel)]="newExercise.notes" name="notes" rows="4"
+            class="w-full bg-brand-surface border border-brand-surface-light text-white rounded-xl py-3 px-4 focus:ring-2 focus:ring-brand-primary focus:border-transparent outline-none placeholder-gray-500 transition-all resize-none"
+            placeholder="Añade instrucciones o detalles adicionales..."></textarea>
+        </div>
+
+        <div class="hidden md:block pt-4">
+          <button type="submit" class="w-full bg-brand-primary hover:bg-blue-600 text-white font-bold rounded-xl py-4 transition-all shadow-lg shadow-blue-900/20">
+            Guardar Ejercicio
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </main>
+
+  <nav class="md:hidden fixed bottom-0 w-full bg-brand-surface border-t border-brand-surface-light flex justify-around items-center py-3 z-30 pb-safe">
+    <a routerLink="/dashboard" class="flex flex-col items-center text-brand-text-muted hover:text-white">
+      <span class="text-xl">🔥</span>
+      <span class="text-[10px] font-medium mt-1">Entrenar</span>
+    </a>
+    <a routerLink="/profile" class="flex flex-col items-center text-brand-primary">
+      <span class="text-xl">👤</span>
+      <span class="text-[10px] font-medium mt-1">Perfil</span>
+    </a>
+  </nav>
+
+</div>
