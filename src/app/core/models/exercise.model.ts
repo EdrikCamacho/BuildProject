@@ -1,4 +1,12 @@
-export type MuscleGroup = 'Pecho' | 'Espalda' | 'Piernas' | 'Hombros' | 'Bíceps' | 'Tríceps' | 'Core' | 'Cardio';
+export type MuscleGroup = 
+  // Principales
+  | 'Pecho' | 'Dorsales' | 'Espalda' | 'Lumbar' | 'ABS' 
+  | 'Bíceps' | 'Triceps' | 'Hombros' | 'Cuádriceps' | 'Femoral' | 'Glúteos'
+  // Secundarios
+  | 'Abductores' | 'Aductores' | 'Antebrazos' | 'Cuello' | 'Gemelos' | 'Trapecio'
+  // Extra para compatibilidad
+  | 'Cardio';
+
 export type Equipment = 'Barra' | 'Mancuernas' | 'Máquina' | 'Peso Corporal' | 'Cables' | 'Kettlebell';
 
 export interface Exercise {
@@ -6,5 +14,5 @@ export interface Exercise {
   name: string;
   muscle: MuscleGroup;
   equipment: Equipment;
-  image?: string; // Para el futuro (gifs o imágenes)
+  image?: string;
 }

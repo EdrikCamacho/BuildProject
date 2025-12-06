@@ -14,12 +14,24 @@ import { Exercise, MuscleGroup } from '../../../core/models/exercise.model';
 export class ExerciseListComponent implements OnInit {
   allExercises: Exercise[] = [];
   filteredExercises: Exercise[] = [];
-  
   searchTerm = '';
-  selectedMuscle: MuscleGroup | 'Todos' = 'Todos';
 
-  // Listas para los filtros (Chips)
-  muscles: (MuscleGroup | 'Todos')[] = ['Todos', 'Pecho', 'Espalda', 'Piernas', 'Hombros', 'Bíceps', 'Tríceps', 'Core'];
+  showFilterModal = false;
+  
+  activeFilters: Set<MuscleGroup> = new Set();
+  tempFilters: Set<MuscleGroup> = new Set();
+
+  // TU LISTA DE MÚSCULOS ACTUALIZADA
+  muscleGroups = {
+    primary: [
+      'Pecho', 'Dorsales', 'Espalda', 'Lumbar', 'ABS', 
+      'Bíceps', 'Triceps', 'Hombros', 'Cuádriceps', 'Femoral', 'Glúteos'
+    ] as MuscleGroup[],
+    
+    secondary: [
+      'Abductores', 'Aductores', 'Antebrazos', 'Cuello', 'Gemelos', 'Trapecio'
+    ] as MuscleGroup[]
+  };
 
   constructor(private exerciseService: ExerciseService) {}
 
@@ -30,17 +42,51 @@ export class ExerciseListComponent implements OnInit {
     });
   }
 
-  // Lógica de filtrado en tiempo real
   filterExercises() {
     this.filteredExercises = this.allExercises.filter(ex => {
       const matchesSearch = ex.name.toLowerCase().includes(this.searchTerm.toLowerCase());
-      const matchesMuscle = this.selectedMuscle === 'Todos' || ex.muscle === this.selectedMuscle;
+      const matchesMuscle = this.activeFilters.size === 0 || this.activeFilters.has(ex.muscle);
       return matchesSearch && matchesMuscle;
     });
   }
 
-  selectMuscle(m: MuscleGroup | 'Todos') {
-    this.selectedMuscle = m;
+  openFilterModal() {
+    this.tempFilters = new Set(this.activeFilters);
+    this.showFilterModal = true;
+  }
+
+  closeFilterModal() {
+    this.showFilterModal = false;
+  }
+
+  toggleMuscle(muscle: MuscleGroup) {
+    if (this.tempFilters.has(muscle)) {
+      this.tempFilters.delete(muscle);
+    } else {
+      this.tempFilters.add(muscle);
+    }
+  }
+
+  applyFilters() {
+    this.activeFilters = new Set(this.tempFilters);
     this.filterExercises();
+    this.showFilterModal = false;
+  }
+
+  isMuscleSelected(muscle: MuscleGroup): boolean {
+    return this.tempFilters.has(muscle);
+  }
+
+  get activeFiltersArray(): MuscleGroup[] {
+    return Array.from(this.activeFilters);
+  }
+
+  removeFilter(muscle: MuscleGroup) {
+    this.activeFilters.delete(muscle);
+    this.filterExercises();
+  }
+
+  createCustomExercise() {
+    console.log('Crear ejercicio personalizado...');
   }
 }
