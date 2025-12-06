@@ -4,15 +4,17 @@ export type MuscleGroup =
   | 'Bíceps' | 'Triceps' | 'Hombros' | 'Cuádriceps' | 'Femoral' | 'Glúteos'
   // Secundarios
   | 'Abductores' | 'Aductores' | 'Antebrazos' | 'Cuello' | 'Gemelos' | 'Trapecio'
-  // Extra para compatibilidad
+  // Extra
   | 'Cardio';
 
 export type Equipment = 'Barra' | 'Mancuernas' | 'Máquina' | 'Peso Corporal' | 'Cables' | 'Kettlebell';
 
 export interface Exercise {
-  id: string;
+  id?: string; // Opcional para cuando se crea
   name: string;
-  muscle: MuscleGroup;
+  muscle: MuscleGroup; // Músculo Principal (Primary)
+  secondaryMuscles?: MuscleGroup[]; // CAMBIO: Array para múltiples secundarios
   equipment: Equipment;
   image?: string;
+  notes?: string;
 }

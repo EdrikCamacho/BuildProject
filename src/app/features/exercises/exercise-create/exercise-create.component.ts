@@ -11,24 +11,24 @@ import { MuscleGroup, Equipment } from '../../../core/models/exercise.model';
   templateUrl: './exercise-create.component.html',
 })
 export class ExerciseCreateComponent {
-  // Modelo para el nuevo ejercicio
+  // Modelo actualizado
   newExercise = {
     name: '',
-    type: 'Peso y Repeticiones', // Valor por defecto y único por ahora
     primaryMuscle: '' as MuscleGroup | '',
-    secondaryMuscle: '' as MuscleGroup | '',
+    secondaryMuscles: [] as MuscleGroup[], // Array vacío inicial
     equipment: '' as Equipment | '',
-    notes: ''
+    notes: '',
+    image: null as string | null // Para la visualización de la imagen
   };
 
-  // Listas de opciones para los selectores
+  // Listas de Músculos (La misma que en el filtro)
   muscleGroups = {
     primary: [
       'Pecho', 'Dorsales', 'Espalda', 'Lumbar', 'ABS', 
       'Bíceps', 'Triceps', 'Hombros', 'Cuádriceps', 'Femoral', 'Glúteos'
     ] as MuscleGroup[],
     secondary: [
-      'Abductores', 'Aductores', 'Antebrazos', 'Cuello', 'Gemelos', 'Trapecio', 'Cardio'
+      'Abductores', 'Aductores', 'Antebrazos', 'Cuello', 'Gemelos', 'Trapecio'
     ] as MuscleGroup[]
   };
 
@@ -36,31 +36,81 @@ export class ExerciseCreateComponent {
     'Barra', 'Mancuernas', 'Máquina', 'Peso Corporal', 'Cables', 'Kettlebell'
   ];
 
+  // Lógica del Modal
+  showModal = false;
+  modalMode: 'primary' | 'secondary' = 'primary'; // Controla qué estamos seleccionando
+  tempSelection: Set<MuscleGroup> = new Set(); // Selección temporal dentro del modal
+
   constructor(private router: Router) {}
 
-  // Función para guardar el ejercicio (por ahora solo simula)
-  saveExercise() {
-    console.log('Guardando ejercicio...', this.newExercise);
-    
-    // Validar que los campos obligatorios estén llenos
-    if (!this.newExercise.name || !this.newExercise.primaryMuscle || !this.newExercise.equipment) {
-      alert('Por favor, completa los campos obligatorios: Nombre, Músculo Principal y Equipamiento.');
-      return;
+  // Abrir modal configurado para el modo correcto
+  openMuscleSelector(mode: 'primary' | 'secondary') {
+    this.modalMode = mode;
+    this.tempSelection.clear();
+
+    // Cargar selección actual en el temporal
+    if (mode === 'primary' && this.newExercise.primaryMuscle) {
+      this.tempSelection.add(this.newExercise.primaryMuscle);
+    } else if (mode === 'secondary') {
+      this.newExercise.secondaryMuscles.forEach(m => this.tempSelection.add(m));
     }
 
-    // Aquí iría la lógica para llamar al servicio y guardar en el backend
-    
-    // Simulamos una redirección exitosa a la lista de ejercicios
-    // this.router.navigate(['/exercises']); 
-    alert('Ejercicio creado exitosamente (Simulación)');
-    // Opcional: limpiar el formulario
-    this.newExercise = {
-      name: '',
-      type: 'Peso y Repeticiones',
-      primaryMuscle: '',
-      secondaryMuscle: '',
-      equipment: '',
-      notes: ''
-    };
+    this.showModal = true;
+  }
+
+  closeModal() {
+    this.showModal = false;
+  }
+
+  // Lógica de selección inteligente
+  toggleMuscle(muscle: MuscleGroup) {
+    if (this.modalMode === 'primary') {
+      // Modo Único: Si seleccionas uno, borras los demás (radio behavior)
+      this.tempSelection.clear();
+      this.tempSelection.add(muscle);
+    } else {
+      // Modo Múltiple: Toggle normal (checkbox behavior)
+      if (this.tempSelection.has(muscle)) {
+        this.tempSelection.delete(muscle);
+      } else {
+        this.tempSelection.add(muscle);
+      }
+    }
+  }
+
+  // Guardar lo seleccionado en el modal al formulario real
+  applySelection() {
+    if (this.modalMode === 'primary') {
+      // Tomamos el primer (y único) valor del set
+      const selected = Array.from(this.tempSelection)[0];
+      this.newExercise.primaryMuscle = selected || '';
+    } else {
+      // Convertimos el set a array
+      this.newExercise.secondaryMuscles = Array.from(this.tempSelection);
+    }
+    this.showModal = false;
+  }
+
+  // Helpers visuales
+  isMuscleSelected(muscle: MuscleGroup): boolean {
+    return this.tempSelection.has(muscle);
+  }
+
+  // Simulación de carga de imagen
+  triggerImageUpload() {
+    console.log('Abriendo selector de archivos nativo...');
+    // Aquí iría la lógica real de input file. Por ahora simulamos que se cargó una.
+    // this.newExercise.image = 'assets/placeholder-image.jpg'; 
+    alert('Funcionalidad de imagen (Backend Pendiente)');
+  }
+
+  saveExercise() {
+    if (!this.newExercise.name || !this.newExercise.primaryMuscle || !this.newExercise.equipment) {
+      alert('Por favor, completa los campos obligatorios.');
+      return;
+    }
+    console.log('Guardando ejercicio:', this.newExercise);
+    alert('Ejercicio creado exitosamente');
+    this.router.navigate(['/exercises']);
   }
 }
