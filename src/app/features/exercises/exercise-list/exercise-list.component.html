@@ -66,7 +66,8 @@
       </div>
 
       <div class="space-y-2">
-        <div *ngFor="let ex of filteredExercises" class="bg-brand-surface p-4 rounded-xl border border-brand-surface-light flex justify-between items-center hover:border-brand-primary/50 transition-colors cursor-pointer group">
+        <div *ngFor="let ex of filteredExercises" class="bg-brand-surface p-4 rounded-xl border border-brand-surface-light flex justify-between items-center hover:border-brand-primary/50 transition-colors cursor-pointer group relative">
+          
           <div class="flex items-center gap-4">
             <div class="w-10 h-10 rounded-lg bg-brand-surface-light flex items-center justify-center text-brand-text-muted font-bold group-hover:text-white transition-colors">
               {{ ex.name.charAt(0) }}
@@ -76,9 +77,13 @@
               <p class="text-xs text-brand-text-muted">{{ ex.muscle }} • {{ ex.equipment }}</p>
             </div>
           </div>
-          <button class="text-brand-primary opacity-0 group-hover:opacity-100 transition-opacity">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+          
+          <button class="text-brand-primary transition-opacity opacity-100 md:opacity-0 md:group-hover:opacity-100 p-1">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-7 h-7">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+            </svg>
           </button>
+
         </div>
 
         <div *ngIf="filteredExercises.length === 0" class="text-center py-10 text-brand-text-muted">
@@ -103,10 +108,12 @@
   <div *ngIf="showFilterModal" class="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
     <div (click)="closeFilterModal()" class="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity"></div>
     <div class="relative bg-brand-surface w-full max-w-lg rounded-t-2xl sm:rounded-2xl p-0 border-t sm:border border-brand-surface-light shadow-2xl flex flex-col max-h-[85vh]">
+      
       <div class="p-6 border-b border-brand-surface-light flex justify-between items-center">
         <h3 class="text-lg font-bold text-white">Filtrar por Músculo</h3>
         <button (click)="closeFilterModal()" class="text-brand-text-muted hover:text-white">✕</button>
       </div>
+
       <div class="overflow-y-auto p-6 space-y-6">
         <div>
           <h4 class="text-xs font-bold text-brand-text-muted uppercase mb-3">Músculos Principales</h4>
@@ -121,6 +128,7 @@
           </div>
         </div>
       </div>
+      
       <div class="p-6 border-t border-brand-surface-light bg-brand-surface">
         <button (click)="applyFilters()" class="w-full py-4 bg-brand-primary hover:bg-blue-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-900/30">Filtrar ({{ tempFilters.size > 0 ? tempFilters.size : 'Todos' }})</button>
       </div>
