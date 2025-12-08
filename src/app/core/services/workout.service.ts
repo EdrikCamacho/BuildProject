@@ -110,6 +110,14 @@ export class WorkoutService {
     this.timerSound.play().catch(e => console.log('Sonido pendiente'));
   }
 
+  updateRestTime(newSeconds: number) {
+    this.defaultRestSeconds = newSeconds;
+    // Si ya estamos descansando, actualizamos el tiempo restante también (opcional)
+    if (this.isResting) {
+       this.restDurationRemaining = newSeconds;
+    }
+  }
+  
   addTimeToShow(seconds: number) {
     if (this.isResting) this.restDurationRemaining += seconds;
   }
