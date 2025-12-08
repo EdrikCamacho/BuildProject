@@ -9,6 +9,7 @@ import { ExerciseCreateComponent } from './features/exercises/exercise-create/ex
 import { ExerciseDetailComponent } from './features/exercises/exercise-detail/exercise-detail.component';
 import { MeasurementListComponent } from './features/measurements/measurement-list/measurement-list.component';
 import { MeasurementAddComponent } from './features/measurements/measurement-add/measurement-add.component';
+import { ProfileEditComponent } from './features/profile/profile-edit/profile-edit.component';
 
 export const routes: Routes = [
   { path: '', component: LandingComponent },
@@ -16,6 +17,7 @@ export const routes: Routes = [
   { path: 'onboarding', component: OnboardingComponent },
   { path: 'dashboard', component: DashboardComponent },
   { path: 'profile', component: ProfileComponent },
+  { path: 'profile/edit', component: ProfileEditComponent },
   { path: 'exercises', component: ExerciseListComponent },
   { path: 'exercises/create', component: ExerciseCreateComponent },
   { path: 'exercises/:id', component: ExerciseDetailComponent },

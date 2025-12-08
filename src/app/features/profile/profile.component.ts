@@ -75,7 +75,4 @@ export class ProfileComponent {
     { title: 'Configuración', icon: '⚙️', desc: 'Cuenta, notificaciones y tema', route: '/settings' }
   ];
 
-  editProfile() {
-    console.log('Ir a editar perfil');
-  }
 }
