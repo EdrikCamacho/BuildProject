@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink, Router, ActivatedRoute } from '@angular/router'; // +ActivatedRoute
+import { RouterLink, Router, ActivatedRoute } from '@angular/router';
 import { ExerciseService } from '../../../core/services/exercise.service';
-import { WorkoutService } from '../../../core/services/workout.service'; // +WorkoutService
+import { WorkoutService } from '../../../core/services/workout.service';
 import { Exercise, MuscleGroup } from '../../../core/models/exercise.model';
 
 @Component({
@@ -23,6 +23,7 @@ export class ExerciseListComponent implements OnInit {
   
   // MODO SELECCIÓN
   isSelectionMode = false;
+  selectedExercises: Set<string> = new Set(); // IDs de los ejercicios seleccionados
 
   muscleGroups = {
     primary: ['Pecho', 'Dorsales', 'Espalda', 'Lumbar', 'ABS', 'Bíceps', 'Triceps', 'Hombros', 'Cuádriceps', 'Femoral', 'Glúteos'] as MuscleGroup[],
@@ -31,13 +32,12 @@ export class ExerciseListComponent implements OnInit {
 
   constructor(
     private exerciseService: ExerciseService,
-    private workoutService: WorkoutService, // Inyectar
+    private workoutService: WorkoutService,
     private router: Router,
-    private route: ActivatedRoute // Inyectar
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit() {
-    // Detectar si estamos en modo selección
     this.route.queryParams.subscribe(params => {
       this.isSelectionMode = params['mode'] === 'selection';
     });
@@ -48,9 +48,33 @@ export class ExerciseListComponent implements OnInit {
     });
   }
 
-  // ... (filterExercises, openFilterModal, etc. SIGUEN IGUAL) ...
-  
-  // FUNCIONES DE FILTRO IGUALES QUE ANTES...
+  // --- LÓGICA DE SELECCIÓN MÚLTIPLE ---
+  toggleExerciseSelection(exercise: Exercise) {
+    if (!this.isSelectionMode || !exercise.id) return;
+
+    if (this.selectedExercises.has(exercise.id)) {
+      this.selectedExercises.delete(exercise.id);
+    } else {
+      this.selectedExercises.add(exercise.id);
+    }
+  }
+
+  isSelected(exercise: Exercise): boolean {
+    return !!exercise.id && this.selectedExercises.has(exercise.id);
+  }
+
+  confirmSelection() {
+    // Buscar los objetos completos de los ejercicios seleccionados
+    const selected = this.allExercises.filter(ex => ex.id && this.selectedExercises.has(ex.id));
+    
+    // Añadirlos uno por uno al servicio
+    selected.forEach(ex => this.workoutService.addExercise(ex));
+    
+    // Volver al tracker
+    this.router.navigate(['/tracker']);
+  }
+  // -------------------------------------
+
   filterExercises() {
     this.filteredExercises = this.allExercises.filter(ex => {
       const matchesSearch = ex.name.toLowerCase().includes(this.searchTerm.toLowerCase());
@@ -67,18 +91,10 @@ export class ExerciseListComponent implements OnInit {
   get activeFiltersArray(): MuscleGroup[] { return Array.from(this.activeFilters); }
   removeFilter(muscle: MuscleGroup) { this.activeFilters.delete(muscle); this.filterExercises(); }
   createCustomExercise() { this.router.navigate(['/exercises/create']); }
-
-  // NUEVA FUNCIÓN: Al hacer clic en un ejercicio
-  onExerciseSelect(exercise: Exercise) {
-    if (this.isSelectionMode) {
-      // 1. Añadir al workout
-      this.workoutService.addExercise(exercise);
-      // 2. Volver al tracker
-      this.router.navigate(['/tracker']);
-    } else {
-      // Comportamiento normal (ir a detalles) si no estamos seleccionando
-      // (Opcional, ya que el icono de Info también lo hace)
-      this.router.navigate(['/exercises', exercise.id]);
-    }
+  
+  // Función auxiliar para navegar a detalles sin disparar la selección
+  goToDetails(id: string, event: Event) {
+    event.stopPropagation(); // Evita que se seleccione la tarjeta al hacer clic en Info
+    this.router.navigate(['/exercises', id]);
   }
 }
