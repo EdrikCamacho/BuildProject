@@ -45,11 +45,7 @@ export class SettingsComponent {
   constructor(private router: Router) {}
 
   handleNavigation(item: SettingItem) {
-    if (item.route === '/settings/account') {
-      alert('Sección de Cuenta: Próximamente');
-    } else {
-      this.router.navigate([item.route]);
-    }
+    this.router.navigate([item.route]);
   }
 
   // FUNCIÓN PARA CERRAR SESIÓN

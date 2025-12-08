@@ -11,6 +11,9 @@ import { MeasurementListComponent } from './features/measurements/measurement-li
 import { MeasurementAddComponent } from './features/measurements/measurement-add/measurement-add.component';
 import { ProfileEditComponent } from './features/profile/profile-edit/profile-edit.component';
 import { SettingsComponent } from './features/settings/settings.component';
+import { AccountComponent } from './features/settings/account/account.component';
+import { ChangeEmailComponent } from './features/settings/account/change-email/change-email.component';
+import { ChangePasswordComponent } from './features/settings/account/change-password/change-password.component';
 
 export const routes: Routes = [
   { path: '', component: LandingComponent },
@@ -20,6 +23,9 @@ export const routes: Routes = [
   { path: 'profile', component: ProfileComponent },
   { path: 'profile/edit', component: ProfileEditComponent },
   { path: 'settings', component: SettingsComponent },
+  { path: 'settings/account', component: AccountComponent },
+  { path: 'settings/account/email', component: ChangeEmailComponent },
+  { path: 'settings/account/password', component: ChangePasswordComponent },
   { path: 'exercises', component: ExerciseListComponent },
   { path: 'exercises/create', component: ExerciseCreateComponent },
   { path: 'exercises/:id', component: ExerciseDetailComponent },
