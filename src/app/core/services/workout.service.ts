@@ -6,16 +6,46 @@ import { Exercise } from '../models/exercise.model';
   providedIn: 'root'
 })
 export class WorkoutService {
-  // El entrenamiento actual (null si no hay ninguno activo)
   activeWorkout: ActiveWorkout | null = null;
-  
-  // Para el cronómetro
-  private timerInterval: any;
+  private workoutTimerInterval: any;
 
-  constructor() {}
+  // Descanso
+  restTimerInterval: any;
+  isResting = false;
+  restDurationRemaining = 0;
+  defaultRestSeconds = 90;
+  private timerSound = new Audio('assets/sounds/timer-beep.mp3');
 
-  // Iniciar una nueva sesión (llamado desde Dashboard)
+  constructor() {
+    // AL INICIAR: Intentar recuperar sesión guardada si se recargó la página
+    this.loadFromStorage();
+  }
+
+  // --- PERSISTENCIA (NUEVO) ---
+  private saveToStorage() {
+    if (this.activeWorkout) {
+      localStorage.setItem('active_workout', JSON.stringify(this.activeWorkout));
+    } else {
+      localStorage.removeItem('active_workout');
+    }
+  }
+
+  private loadFromStorage() {
+    const saved = localStorage.getItem('active_workout');
+    if (saved) {
+      this.activeWorkout = JSON.parse(saved);
+      // Restaurar las fechas porque JSON las convierte a string
+      if (this.activeWorkout) {
+        this.activeWorkout.startTime = new Date(this.activeWorkout.startTime);
+        // Reiniciar el timer para que siga contando
+        this.startWorkoutTimer(); 
+      }
+    }
+  }
+  // ----------------------------
+
   startNewWorkout(name: string = 'Entrenamiento Libre') {
+    this.stopRestTimer();
     this.activeWorkout = {
       name,
       startTime: new Date(),
@@ -23,47 +53,84 @@ export class WorkoutService {
       exercises: [],
       volume: 0
     };
-    this.startTimer();
+    this.saveToStorage(); // Guardar estado inicial
+    this.startWorkoutTimer();
   }
 
-  // Añadir ejercicio desde la Biblioteca
-  addExercise(exercise: Exercise) {
-    if (!this.activeWorkout) return;
-
-    const newGroup: WorkoutExercise = {
-      tempId: Date.now().toString(), // ID único temporal
-      exercise: exercise,
-      sets: [
-        { id: 1, type: 'normal', weight: null, reps: null, completed: false }
-      ]
-    };
-    
-    this.activeWorkout.exercises.push(newGroup);
-  }
-
-  // Cancelar/Terminar
   stopWorkout() {
     this.activeWorkout = null;
-    this.stopTimer();
+    this.saveToStorage(); // Limpiar guardado
+    this.stopWorkoutTimer();
+    this.stopRestTimer();
   }
 
-  // Lógica del Timer (Centralizada)
-  private startTimer() {
-    this.stopTimer(); // Limpiar por si acaso
-    this.timerInterval = setInterval(() => {
+  addExercise(exercise: Exercise) {
+    if (!this.activeWorkout) return;
+    const newGroup: WorkoutExercise = {
+      tempId: Date.now().toString(),
+      exercise: exercise,
+      sets: [{ id: 1, type: 'normal', weight: null, reps: null, completed: false }]
+    };
+    this.activeWorkout.exercises.push(newGroup);
+    this.saveToStorage(); // Guardar cambios
+  }
+
+  removeExercise(index: number) {
+    if (!this.activeWorkout) return;
+    this.activeWorkout.exercises.splice(index, 1);
+    this.saveToStorage(); // Guardar cambios
+  }
+
+  replaceExercise(index: number, newExercise: Exercise) {
+    if (!this.activeWorkout || !this.activeWorkout.exercises[index]) return;
+    this.activeWorkout.exercises[index].exercise = newExercise;
+    this.saveToStorage(); // Guardar cambios
+  }
+
+  // --- TIMERS ---
+  
+  startRestTimer() {
+    this.stopRestTimer();
+    this.isResting = true;
+    this.restDurationRemaining = this.defaultRestSeconds;
+    this.restTimerInterval = setInterval(() => {
+      this.restDurationRemaining--;
+      if (this.restDurationRemaining <= 0) this.finishRestTimer();
+    }, 1000);
+  }
+
+  stopRestTimer() {
+    if (this.restTimerInterval) clearInterval(this.restTimerInterval);
+    this.isResting = false;
+    this.restDurationRemaining = 0;
+  }
+
+  finishRestTimer() {
+    this.stopRestTimer();
+    this.timerSound.play().catch(e => console.log('Sonido pendiente'));
+  }
+
+  addTimeToShow(seconds: number) {
+    if (this.isResting) this.restDurationRemaining += seconds;
+  }
+
+  private startWorkoutTimer() {
+    this.stopWorkoutTimer();
+    this.workoutTimerInterval = setInterval(() => {
       if (this.activeWorkout) {
         this.activeWorkout.durationSeconds++;
+        // Guardamos cada 5 segundos para no saturar, o en eventos clave
+        if (this.activeWorkout.durationSeconds % 5 === 0) this.saveToStorage();
       }
     }, 1000);
   }
 
-  private stopTimer() {
-    if (this.timerInterval) clearInterval(this.timerInterval);
+  private stopWorkoutTimer() {
+    if (this.workoutTimerInterval) clearInterval(this.workoutTimerInterval);
   }
 
-  // Helper para formato de tiempo (usado en componentes)
   formatTime(seconds: number): string {
-    if (!seconds) return '00:00';
+    if (!seconds || seconds < 0) return '00:00';
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;

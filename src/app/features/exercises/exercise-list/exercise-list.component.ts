@@ -21,9 +21,12 @@ export class ExerciseListComponent implements OnInit {
   activeFilters: Set<MuscleGroup> = new Set();
   tempFilters: Set<MuscleGroup> = new Set();
   
-  // MODO SELECCIÓN
+  // MODOS: Selección Múltiple y Reemplazo
   isSelectionMode = false;
-  selectedExercises: Set<string> = new Set(); // IDs de los ejercicios seleccionados
+  isReplaceMode = false; // Nuevo
+  replaceIndex: number | null = null; // Nuevo
+
+  selectedExercises: Set<string> = new Set();
 
   muscleGroups = {
     primary: ['Pecho', 'Dorsales', 'Espalda', 'Lumbar', 'ABS', 'Bíceps', 'Triceps', 'Hombros', 'Cuádriceps', 'Femoral', 'Glúteos'] as MuscleGroup[],
@@ -40,6 +43,8 @@ export class ExerciseListComponent implements OnInit {
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
       this.isSelectionMode = params['mode'] === 'selection';
+      this.isReplaceMode = params['mode'] === 'replace'; // Detectar reemplazo
+      this.replaceIndex = params['replaceIndex'] ? +params['replaceIndex'] : null;
     });
 
     this.exerciseService.getExercises().subscribe(data => {
@@ -48,32 +53,39 @@ export class ExerciseListComponent implements OnInit {
     });
   }
 
-  // --- LÓGICA DE SELECCIÓN MÚLTIPLE ---
+  // --- LÓGICA DE SELECCIÓN Y REEMPLAZO ---
+  onExerciseSelect(exercise: Exercise) {
+    if (this.isReplaceMode && this.replaceIndex !== null) {
+      // CASO REEMPLAZAR
+      this.workoutService.replaceExercise(this.replaceIndex, exercise);
+      this.router.navigate(['/tracker']);
+    } else if (this.isSelectionMode) {
+      // CASO SELECCIÓN MÚLTIPLE
+      this.toggleExerciseSelection(exercise);
+    } else {
+      // CASO NORMAL: Ver detalles sin salir
+      this.goToDetails(exercise.id!, null);
+    }
+  }
+
+  // ... (el resto de funciones como toggleExerciseSelection, filterExercises, etc. siguen igual que en tu archivo actual) ...
+  // Solo asegúrate de copiar todo el archivo si tienes dudas.
+  
   toggleExerciseSelection(exercise: Exercise) {
     if (!this.isSelectionMode || !exercise.id) return;
-
     if (this.selectedExercises.has(exercise.id)) {
       this.selectedExercises.delete(exercise.id);
     } else {
       this.selectedExercises.add(exercise.id);
     }
   }
-
-  isSelected(exercise: Exercise): boolean {
-    return !!exercise.id && this.selectedExercises.has(exercise.id);
-  }
-
+  isSelected(exercise: Exercise): boolean { return !!exercise.id && this.selectedExercises.has(exercise.id); }
+  
   confirmSelection() {
-    // Buscar los objetos completos de los ejercicios seleccionados
     const selected = this.allExercises.filter(ex => ex.id && this.selectedExercises.has(ex.id));
-    
-    // Añadirlos uno por uno al servicio
     selected.forEach(ex => this.workoutService.addExercise(ex));
-    
-    // Volver al tracker
     this.router.navigate(['/tracker']);
   }
-  // -------------------------------------
 
   filterExercises() {
     this.filteredExercises = this.allExercises.filter(ex => {
@@ -92,9 +104,8 @@ export class ExerciseListComponent implements OnInit {
   removeFilter(muscle: MuscleGroup) { this.activeFilters.delete(muscle); this.filterExercises(); }
   createCustomExercise() { this.router.navigate(['/exercises/create']); }
   
-  // Función auxiliar para navegar a detalles sin disparar la selección
-  goToDetails(id: string, event: Event) {
-    event.stopPropagation(); // Evita que se seleccione la tarjeta al hacer clic en Info
+  goToDetails(id: string, event: Event | null) {
+    if(event) event.stopPropagation();
     this.router.navigate(['/exercises', id]);
   }
 }

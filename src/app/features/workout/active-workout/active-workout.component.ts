@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -13,32 +13,55 @@ import { ActiveWorkout, WorkoutSet } from '../../../core/models/workout.model';
 })
 export class ActiveWorkoutComponent implements OnInit {
   
-  // Getter para acceder al workout del servicio
-  get workout(): ActiveWorkout | null {
-    return this.workoutService.activeWorkout;
-  }
+  // Controla qué menú desplegable está abierto (índice del ejercicio)
+  activeMenuIndex: number | null = null;
 
-  // Getter para el tiempo formateado
-  get timerDisplay(): string {
-    return this.workoutService.formatTime(this.workout?.durationSeconds || 0);
-  }
+  // Getters para conectar con el servicio
+  get workout(): ActiveWorkout | null { return this.workoutService.activeWorkout; }
+  get timerDisplay(): string { return this.workoutService.formatTime(this.workout?.durationSeconds || 0); }
+  
+  // Getters del Descanso
+  get isResting(): boolean { return this.workoutService.isResting; }
+  get restTimerDisplay(): string { return this.workoutService.formatTime(this.workoutService.restDurationRemaining); }
 
-  constructor(private router: Router, private workoutService: WorkoutService) {}
+  constructor(private router: Router, public workoutService: WorkoutService) {}
 
   ngOnInit() {
-    // Si entran directo a /tracker sin iniciar sesión, redirigir
+    // Si no hay workout activo, volver al dashboard
     if (!this.workoutService.activeWorkout) {
       this.router.navigate(['/dashboard']);
     }
   }
 
-  // --- NAVEGACIÓN A BIBLIOTECA ---
-  addExercise() {
-    // Vamos a la lista de ejercicios indicando que queremos SELECCIONAR
-    this.router.navigate(['/exercises'], { queryParams: { mode: 'selection' } });
+  // --- MENÚ DE OPCIONES ---
+  toggleMenu(index: number, event: Event) {
+    event.stopPropagation(); // Evita conflictos de click
+    this.activeMenuIndex = this.activeMenuIndex === index ? null : index;
   }
 
-  // --- MÉTODOS DE EDICIÓN ---
+  closeMenu() {
+    this.activeMenuIndex = null;
+  }
+
+  // --- ACCIONES DEL MENÚ ---
+  viewInstructions(exerciseId: string) {
+    // Vamos al detalle y le decimos que vuelva al tracker
+    this.router.navigate(['/exercises', exerciseId], { queryParams: { returnTo: 'selection' } }); // Reusamos la lógica de retorno
+  }
+
+  startReplacing(index: number) {
+    // Vamos a la biblioteca en modo 'replace'
+    this.router.navigate(['/exercises'], { queryParams: { mode: 'replace', replaceIndex: index } });
+  }
+
+  removeExerciseUi(index: number) {
+    if (confirm('¿Eliminar este ejercicio de la rutina?')) {
+      this.workoutService.removeExercise(index);
+      this.closeMenu();
+    }
+  }
+
+  // --- GESTIÓN DE SETS ---
   addSet(exerciseIndex: number) {
     if (!this.workout) return;
     const sets = this.workout.exercises[exerciseIndex].sets;
@@ -60,6 +83,19 @@ export class ActiveWorkoutComponent implements OnInit {
 
   toggleSetCompletion(set: WorkoutSet) {
     set.completed = !set.completed;
+    if (set.completed) {
+      // Iniciar descanso automático al completar
+      this.workoutService.startRestTimer();
+    }
+  }
+
+  // --- CONTROLES TEMPORIZADOR ---
+  skipRest() { this.workoutService.stopRestTimer(); }
+  addRestTime(seconds: number) { this.workoutService.addTimeToShow(seconds); }
+
+  // --- NAVEGACIÓN ---
+  addExercise() {
+    this.router.navigate(['/exercises'], { queryParams: { mode: 'selection' } });
   }
 
   finishWorkout() {
