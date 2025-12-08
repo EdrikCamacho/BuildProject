@@ -12,7 +12,7 @@ export class ExerciseService {
       name: 'Press de Banca', 
       muscle: 'Pecho', 
       equipment: 'Barra',
-      image: 'images/bench-press.jpg',
+      image: 'images/press-banca.jpg',
       secondaryMuscles: ['Triceps', 'Hombros'],
       videoUrl: 'https://www.youtube.com/embed/0SJy6gPw_Ik', 
       records: [
