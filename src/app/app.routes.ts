@@ -10,6 +10,7 @@ import { ExerciseDetailComponent } from './features/exercises/exercise-detail/ex
 import { MeasurementListComponent } from './features/measurements/measurement-list/measurement-list.component';
 import { MeasurementAddComponent } from './features/measurements/measurement-add/measurement-add.component';
 import { ProfileEditComponent } from './features/profile/profile-edit/profile-edit.component';
+import { SettingsComponent } from './features/settings/settings.component';
 
 export const routes: Routes = [
   { path: '', component: LandingComponent },
@@ -18,6 +19,7 @@ export const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent },
   { path: 'profile', component: ProfileComponent },
   { path: 'profile/edit', component: ProfileEditComponent },
+  { path: 'settings', component: SettingsComponent },
   { path: 'exercises', component: ExerciseListComponent },
   { path: 'exercises/create', component: ExerciseCreateComponent },
   { path: 'exercises/:id', component: ExerciseDetailComponent },

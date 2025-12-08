@@ -1,0 +1,68 @@
+<div class="flex h-screen bg-brand-black font-sans text-brand-text">
+
+  <aside class="hidden md:flex flex-col w-64 bg-brand-surface border-r border-brand-surface-light text-white p-6 justify-between">
+    <div>
+      <div class="mb-10 flex items-center gap-2 text-brand-primary font-bold text-2xl">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
+        <span>BUILD<span class="text-white">PROJECT</span></span>
+      </div>
+      <nav class="space-y-2">
+        <a routerLink="/dashboard" class="flex items-center gap-3 p-3 text-brand-text-muted hover:text-white hover:bg-brand-surface-light rounded-xl transition-colors">
+          <span>🏋️</span> Entrenar
+        </a>
+        <a routerLink="/profile" class="flex items-center gap-3 p-3 bg-brand-primary/10 text-brand-primary rounded-xl font-medium border border-brand-primary/20">
+          <span>👤</span> Perfil
+        </a>
+      </nav>
+    </div>
+  </aside>
+
+  <main class="flex-1 flex flex-col h-full overflow-hidden relative bg-brand-black">
+    
+    <header class="bg-brand-surface border-b border-brand-surface-light p-4 flex items-center gap-4 z-10">
+      <a routerLink="/profile" class="text-brand-text-muted hover:text-white">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+      </a>
+      <h1 class="font-bold text-xl text-white">Configuración</h1>
+    </header>
+
+    <div class="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8">
+      
+      <div *ngFor="let group of settingGroups" class="mb-8 last:mb-0">
+        <h2 class="text-sm font-bold text-brand-text-muted uppercase tracking-wider mb-3 px-1">
+          {{ group.title }}
+        </h2>
+        <div class="space-y-2 bg-brand-surface border border-brand-surface-light rounded-xl overflow-hidden">
+          <div *ngFor="let item of group.items; let last = last" (click)="handleNavigation(item)" class="flex items-center justify-between p-4 hover:bg-brand-surface-light transition-colors cursor-pointer group" [ngClass]="{'border-b border-brand-surface-light': !last}">
+            <div class="flex items-center gap-4">
+              <div class="text-2xl">{{ item.icon }}</div>
+              <div>
+                <div class="font-medium text-white group-hover:text-brand-primary transition-colors">{{ item.title }}</div>
+                <div *ngIf="item.desc" class="text-xs text-brand-text-muted">{{ item.desc }}</div>
+              </div>
+            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-brand-text-muted group-hover:text-white group-hover:translate-x-1 transition-all"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+          </div>
+        </div>
+      </div>
+
+      <button (click)="logout()" class="w-full mt-8 p-4 text-red-500 font-medium text-sm hover:bg-red-500/10 rounded-xl transition-colors flex items-center justify-center gap-2 border border-transparent hover:border-red-500/20">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" /></svg>
+        Cerrar Sesión
+      </button>
+
+    </div>
+  </main>
+
+  <nav class="md:hidden fixed bottom-0 w-full bg-brand-surface border-t border-brand-surface-light flex justify-around items-center py-3 z-30 pb-safe">
+    <a routerLink="/dashboard" class="flex flex-col items-center text-brand-text-muted hover:text-white">
+      <span class="text-xl">🏋️</span>
+      <span class="text-[10px] font-medium mt-1">Entrenar</span>
+    </a>
+    <a routerLink="/profile" class="flex flex-col items-center text-brand-primary">
+      <span class="text-xl">👤</span>
+      <span class="text-[10px] font-medium mt-1">Perfil</span>
+    </a>
+  </nav>
+
+</div>
