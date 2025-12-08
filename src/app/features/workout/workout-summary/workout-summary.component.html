@@ -1,0 +1,95 @@
+<div class="flex h-screen bg-brand-black font-sans text-brand-text">
+
+  <main class="flex-1 flex flex-col h-full overflow-hidden relative bg-brand-black">
+    
+    <header class="bg-brand-surface border-b border-brand-surface-light p-4 z-10 flex items-center justify-between flex-none">
+      
+      <button (click)="resumeWorkout()" class="flex items-center gap-2 text-brand-text-muted hover:text-white transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
+        <span class="text-sm font-bold">Seguir</span>
+      </button>
+
+      <h1 class="text-white font-bold text-lg">Resumen</h1>
+      
+      <div class="w-16"></div>
+    </header>
+
+    <div class="flex-1 overflow-y-auto p-4 md:p-8">
+      
+      <div class="text-center mb-8 mt-4">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-brand-primary/20 text-brand-primary mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8"><path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" /></svg>
+        </div>
+        <h2 class="text-2xl font-bold text-white">Entrenamiento en Curso</h2>
+        
+        <p class="text-brand-text-muted text-sm mt-1">
+          {{ currentDate | date:'fullDate' }} • {{ currentDate | date:'shortTime' }}
+        </p>
+      </div>
+
+      <div class="mb-6">
+        <label class="block text-xs font-bold text-brand-text-muted mb-2 uppercase tracking-wider">Nombre de la Rutina</label>
+        <input type="text" [(ngModel)]="workout!.name" 
+          class="w-full bg-brand-surface border border-brand-surface-light rounded-xl p-4 text-white font-bold text-lg focus:outline-none focus:border-brand-primary placeholder-brand-text-muted/50"
+          placeholder="Nombre del entrenamiento...">
+      </div>
+
+      <div class="mb-6">
+         <textarea [(ngModel)]="workoutDescription" rows="3"
+          class="w-full bg-brand-surface border border-brand-surface-light rounded-xl p-4 text-white focus:outline-none focus:border-brand-primary placeholder-brand-text-muted/50 resize-none"
+          placeholder="¿Cómo te sentiste? Añade notas..."></textarea>
+      </div>
+
+      <div class="grid grid-cols-3 gap-4 mb-8">
+        <div class="bg-brand-surface p-4 rounded-xl border border-brand-surface-light text-center">
+          <p class="text-[10px] text-brand-text-muted uppercase font-bold tracking-wider mb-1">Duración</p>
+          <p class="text-white font-bold text-lg font-mono">{{ durationDisplay }}</p>
+        </div>
+        <div class="bg-brand-surface p-4 rounded-xl border border-brand-surface-light text-center">
+          <p class="text-[10px] text-brand-text-muted uppercase font-bold tracking-wider mb-1">Volumen</p>
+          <p class="text-white font-bold text-lg">{{ totalVolume }} kg</p>
+        </div>
+        <div class="bg-brand-surface p-4 rounded-xl border border-brand-surface-light text-center">
+          <p class="text-[10px] text-brand-text-muted uppercase font-bold tracking-wider mb-1">Series</p>
+          <p class="text-white font-bold text-lg">{{ totalSets }}</p>
+        </div>
+      </div>
+
+      <div class="mb-8">
+        <button (click)="addPhoto()" class="w-full py-3 border-2 border-dashed border-brand-surface-light rounded-xl text-brand-text-muted hover:text-white hover:border-brand-primary hover:bg-brand-surface-light transition-all flex items-center justify-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" /></svg>
+          Añadir Foto
+        </button>
+      </div>
+
+      <h3 class="text-white font-bold mb-4 px-1">Ejercicios Realizados</h3>
+      <div class="space-y-2">
+        <div *ngFor="let item of workout?.exercises" class="flex justify-between items-center bg-brand-surface p-4 rounded-xl border border-brand-surface-light">
+          <div class="flex items-center gap-3">
+             <div class="w-8 h-8 rounded-lg bg-brand-surface-light flex items-center justify-center text-brand-text-muted text-xs font-bold">
+               {{ item.sets.length }}
+             </div>
+             <span class="text-white font-medium">{{ item.exercise.name }}</span>
+          </div>
+          <div class="text-brand-text-muted text-xs">
+             <span>{{ item.sets.length }} sets</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="flex-none w-full p-4 bg-brand-black border-t border-brand-surface-light z-20 flex flex-col md:flex-row gap-3">
+      
+      <button (click)="saveWorkout()" class="w-full py-4 bg-brand-primary text-white hover:bg-blue-600 rounded-xl font-bold shadow-lg shadow-blue-900/30 transition-all transform active:scale-95 order-1 md:order-2">
+        Guardar Entrenamiento
+      </button>
+
+      <button (click)="discardWorkout()" class="w-full md:w-auto px-6 py-4 bg-brand-surface border border-brand-surface-light text-red-500 hover:bg-red-500/10 hover:border-red-500/20 rounded-xl font-bold transition-colors order-2 md:order-1">
+        Descartar
+      </button>
+      
+    </div>
+
+  </main>
+</div>

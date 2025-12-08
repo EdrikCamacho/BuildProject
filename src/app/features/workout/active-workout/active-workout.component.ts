@@ -52,8 +52,6 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
       this.timerSubscription.unsubscribe();
     }
   }
-
-  // ... (El resto de funciones: toggleMenu, viewInstructions, etc. siguen EXACTAMENTE IGUAL) ...
   
   toggleMenu(index: number, event: Event) {
     event.stopPropagation();
@@ -115,6 +113,9 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
   }
 
   addExercise() { this.router.navigate(['/exercises'], { queryParams: { mode: 'selection' } }); }
-  finishWorkout() { if(confirm('¿Terminar?')) { this.workoutService.stopWorkout(); this.router.navigate(['/dashboard']); } }
+  
+  finishWorkout() {
+    this.router.navigate(['/tracker/summary']);
+  }
   cancelWorkout() { if(confirm('¿Descartar?')) { this.workoutService.stopWorkout(); this.router.navigate(['/dashboard']); } }
 }

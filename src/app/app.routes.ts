@@ -4,6 +4,7 @@ import { RegisterComponent } from './features/auth/register/register.component';
 import { OnboardingComponent } from './features/onboarding/onboarding.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { ActiveWorkoutComponent } from './features/workout/active-workout/active-workout.component';
+import { WorkoutSummaryComponent } from './features/workout/workout-summary/workout-summary.component';
 import { ProfileComponent } from './features/profile/profile.component';
 import { ExerciseListComponent } from './features/exercises/exercise-list/exercise-list.component';
 import { ExerciseCreateComponent } from './features/exercises/exercise-create/exercise-create.component';
@@ -22,6 +23,7 @@ export const routes: Routes = [
   { path: 'onboarding', component: OnboardingComponent },
   { path: 'dashboard', component: DashboardComponent },
   { path: 'tracker', component: ActiveWorkoutComponent },
+  { path: 'tracker/summary', component: WorkoutSummaryComponent },
   { path: 'profile', component: ProfileComponent },
   { path: 'profile/edit', component: ProfileEditComponent },
   { path: 'settings', component: SettingsComponent },
