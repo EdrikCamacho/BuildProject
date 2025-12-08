@@ -1,8 +1,8 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core'; // +ChangeDetectorRef
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs'; // +Subscription
+import { Subscription } from 'rxjs';
 import { WorkoutService } from '../../../core/services/workout.service';
 import { ActiveWorkout } from '../../../core/models/workout.model';
 
@@ -16,14 +16,14 @@ export class WorkoutSummaryComponent implements OnInit, OnDestroy {
   
   workout: ActiveWorkout | null = null;
   workoutDescription = '';
-  currentDate = new Date(); // Para mostrar la fecha de finalización
+  currentDate = new Date();
   
   private timerSubscription: Subscription | undefined;
 
   constructor(
     private workoutService: WorkoutService,
     private router: Router,
-    private cdr: ChangeDetectorRef // Inyectar detector
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -34,10 +34,9 @@ export class WorkoutSummaryComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // SUSCRIBIRSE AL TIMER: Para que la duración aumente en tiempo real aquí también
+    // Actualizar reloj y fecha en tiempo real
     this.timerSubscription = this.workoutService.timerTick$.subscribe(() => {
-      // Forzar actualización de la vista para que cambien los números
-      this.currentDate = new Date(); // Actualizar fecha/hora actual
+      this.currentDate = new Date();
       this.cdr.detectChanges();
     });
   }
@@ -46,39 +45,56 @@ export class WorkoutSummaryComponent implements OnInit, OnDestroy {
     if (this.timerSubscription) this.timerSubscription.unsubscribe();
   }
 
-  // Getters dinámicos (se recalculan con cada latido del timer)
   get durationDisplay(): string {
     return this.workoutService.formatTime(this.workout?.durationSeconds || 0);
   }
 
+  // --- CÁLCULO DE VOLUMEN (NUEVO) ---
   get totalVolume(): number {
-    return this.workout?.volume || 0; // El servicio ya calcula esto, o lo calculamos aquí si es necesario
+    if (!this.workout) return 0;
+    
+    // Recorremos todos los ejercicios
+    return this.workout.exercises.reduce((total, ex) => {
+      
+      // En cada ejercicio, sumamos los sets COMPLETADOS
+      const exerciseVol = ex.sets.reduce((setAcc, s) => {
+        // Solo cuenta si está completado y tiene valores válidos
+        if (s.completed && s.weight && s.reps) {
+          return setAcc + (s.weight * s.reps);
+        }
+        return setAcc;
+      }, 0);
+      
+      return total + exerciseVol;
+    }, 0);
   }
   
   get totalSets(): number {
     if (!this.workout) return 0;
-    // Calcular sets completados en tiempo real
     return this.workout.exercises.reduce((acc, ex) => acc + ex.sets.filter(s => s.completed).length, 0);
   }
 
-  // ACCIONES
+  // --- ACCIONES ---
 
   resumeWorkout() {
-    // Simplemente volvemos atrás, el timer nunca paró
     this.router.navigate(['/tracker']);
   }
 
   saveWorkout() {
+    // Guardamos el volumen calculado en el objeto final antes de enviar
+    if (this.workout) {
+      this.workout.volume = this.totalVolume;
+    }
+
     console.log('Guardando entrenamiento final...', { 
       ...this.workout, 
       description: this.workoutDescription,
       endTime: new Date()
     });
     
-    // AQUÍ SÍ DETENEMOS TODO
     this.workoutService.stopWorkout(); 
     
-    alert('¡Entrenamiento guardado exitosamente!');
+    alert(`¡Entrenamiento guardado!\nVolumen Total: ${this.totalVolume} kg`);
     this.router.navigate(['/dashboard']);
   }
 
