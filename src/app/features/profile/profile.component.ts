@@ -15,18 +15,18 @@ type Period = '1S' | '1M' | '3M' | '1A' | 'Todo';
 export class ProfileComponent {
   user = {
     name: 'Atleta',
-    username: '@usuario',
+    // Eliminado username
+    photoUrl: '', // CAMBIO: Campo para la foto (deja '' para ver la letra 'A')
+    // Prueba con foto: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1000&auto=format&fit=crop'
     joinDate: 'Diciembre 2025',
     level: 'Intermedio',
     avatarLetter: 'A'
   };
 
-  // Estado del periodo seleccionado (Por defecto 1 Semana)
+  // Estado del periodo seleccionado
   currentPeriod: Period = '1S';
   periods: Period[] = ['1S', '1M', '3M', '1A', 'Todo'];
 
-  // Datos simulados para cada periodo (Volumen y Series)
-  // 'trend' son valores del 0 al 100 para dibujar las barritas
   analyticsData = {
     '1S': { 
       volume: '12.5T', 
@@ -60,7 +60,6 @@ export class ProfileComponent {
     }
   };
 
-  // Getter para obtener los datos del periodo actual fácilmente en el HTML
   get currentStats() {
     return this.analyticsData[this.currentPeriod];
   }
@@ -75,4 +74,8 @@ export class ProfileComponent {
     { title: 'Análisis Muscular', icon: 'anatomy', desc: 'Mapa de calor y simetría', route: '/muscles' },
     { title: 'Configuración', icon: '⚙️', desc: 'Cuenta, notificaciones y tema', route: '/settings' }
   ];
+
+  editProfile() {
+    console.log('Ir a editar perfil');
+  }
 }
