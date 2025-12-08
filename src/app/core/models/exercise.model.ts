@@ -4,17 +4,40 @@ export type MuscleGroup =
   | 'Bíceps' | 'Triceps' | 'Hombros' | 'Cuádriceps' | 'Femoral' | 'Glúteos'
   // Secundarios
   | 'Abductores' | 'Aductores' | 'Antebrazos' | 'Cuello' | 'Gemelos' | 'Trapecio'
-  // Extra
   | 'Cardio';
 
 export type Equipment = 'Barra' | 'Mancuernas' | 'Máquina' | 'Peso Corporal' | 'Cables' | 'Kettlebell';
 
+// --- NUEVAS INTERFACES ---
+export interface ExerciseSet {
+  reps: number;
+  weight: number;
+}
+
+export interface ExerciseLog {
+  date: string; // Fecha del entrenamiento
+  sets: ExerciseSet[]; // Series realizadas ese día
+}
+
+export interface PersonalRecord {
+  type: '1RM Estimado' | 'Volumen Máximo' | 'Peso Máximo';
+  value: string;
+  date: string;
+}
+// -------------------------
+
 export interface Exercise {
-  id?: string; // Opcional para cuando se crea
+  id?: string;
   name: string;
-  muscle: MuscleGroup; // Músculo Principal (Primary)
-  secondaryMuscles?: MuscleGroup[]; // CAMBIO: Array para múltiples secundarios
+  muscle: MuscleGroup;
+  secondaryMuscles?: MuscleGroup[];
   equipment: Equipment;
   image?: string;
   notes?: string;
+  
+  // --- NUEVAS PROPIEDADES PARA EL DETALLE ---
+  videoUrl?: string; // URL del video explicativo (YouTube, etc.)
+  history?: ExerciseLog[]; // Historial de entrenamientos
+  records?: PersonalRecord[]; // Récords personales
+  // -----------------------------------------
 }

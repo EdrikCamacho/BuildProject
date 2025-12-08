@@ -1,0 +1,144 @@
+<div class="flex h-screen bg-brand-black font-sans text-brand-text overflow-hidden">
+
+  <main class="flex-1 flex flex-col h-full relative bg-brand-black overflow-y-auto pb-0">
+    
+    <div *ngIf="exercise; else loadingTemplate">
+      
+      <div class="relative h-72 md:h-80 bg-brand-surface-light">
+        <img [src]="exercise.image || 'assets/placeholder-exercise.jpg'" 
+             class="w-full h-full object-cover opacity-60" 
+             alt="{{ exercise.name }}">
+        <div class="absolute inset-0 bg-gradient-to-t from-brand-black via-brand-black/50 to-transparent"></div>
+        
+        <a routerLink="/exercises" class="absolute top-6 left-6 w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-black/60 transition-colors z-20">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+        </a>
+
+        <div class="absolute bottom-0 left-0 p-6 z-10 w-full">
+          <h1 class="text-3xl md:text-4xl font-bold text-white tracking-tight leading-tight mb-2">{{ exercise.name }}</h1>
+          <div class="flex items-center gap-2 text-sm text-brand-text-muted">
+            <span class="bg-brand-primary/20 text-brand-primary px-2 py-0.5 rounded border border-brand-primary/30 uppercase text-xs font-bold">{{ exercise.muscle }}</span>
+            <span>•</span>
+            <span>{{ exercise.equipment }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex border-b border-brand-surface-light bg-brand-black sticky top-0 z-30 shadow-md">
+        <button (click)="setActiveTab('about')" class="flex-1 py-4 text-sm font-bold text-center uppercase tracking-wider relative transition-colors" [ngClass]="activeTab === 'about' ? 'text-brand-primary' : 'text-brand-text-muted hover:text-white'">
+          Info
+          <div *ngIf="activeTab === 'about'" class="absolute bottom-0 left-0 w-full h-0.5 bg-brand-primary"></div>
+        </button>
+        <button (click)="setActiveTab('history')" class="flex-1 py-4 text-sm font-bold text-center uppercase tracking-wider relative transition-colors" [ngClass]="activeTab === 'history' ? 'text-brand-primary' : 'text-brand-text-muted hover:text-white'">
+          Historial
+          <div *ngIf="activeTab === 'history'" class="absolute bottom-0 left-0 w-full h-0.5 bg-brand-primary"></div>
+        </button>
+        <button (click)="setActiveTab('charts')" class="flex-1 py-4 text-sm font-bold text-center uppercase tracking-wider relative transition-colors" [ngClass]="activeTab === 'charts' ? 'text-brand-primary' : 'text-brand-text-muted hover:text-white'">
+          Gráficos
+          <div *ngIf="activeTab === 'charts'" class="absolute bottom-0 left-0 w-full h-0.5 bg-brand-primary"></div>
+        </button>
+      </div>
+
+      <div class="p-6 pb-20">
+
+        <div *ngIf="activeTab === 'about'" class="space-y-8 animate-fade-in">
+          
+          <section *ngIf="exercise.records?.length">
+            <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <span class="text-yellow-500">🏆</span> Récords Personales
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div *ngFor="let record of exercise.records" class="bg-brand-surface p-4 rounded-xl border border-brand-surface-light flex items-center gap-4 hover:border-yellow-500/30 transition-colors">
+                <div class="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center text-yellow-500">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.504-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 002.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.485c.982.143 1.954.317 2.916.52a6.003 6.003 0 01-5.396 4.972m0 0a6.726 6.726 0 01-2.748 1.35m0 0a6.772 6.772 0 01-3.044 0" /></svg>
+                </div>
+                <div>
+                  <p class="text-[10px] text-brand-text-muted uppercase font-bold tracking-wide">{{ record.type }}</p>
+                  <p class="text-xl font-bold text-white">{{ record.value }}</p>
+                  <p class="text-xs text-brand-text-muted">{{ record.date }}</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <span class="text-brand-primary">💪</span> Músculos
+            </h2>
+            <div class="flex flex-wrap gap-2">
+              <span class="px-4 py-1.5 rounded-full text-sm font-bold bg-brand-primary text-white border border-brand-primary shadow-lg shadow-brand-primary/20">
+                {{ exercise.muscle }}
+              </span>
+              <span *ngFor="let m of exercise.secondaryMuscles" class="px-4 py-1.5 rounded-full text-sm font-medium bg-brand-surface border border-brand-surface-light text-brand-text-muted">
+                {{ m }}
+              </span>
+            </div>
+          </section>
+
+          <section *ngIf="safeVideoUrl">
+            <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <span class="text-red-500">▶</span> Video Guía
+            </h2>
+            <div class="w-full md:w-3/4 mx-auto aspect-[9/16] md:aspect-video bg-brand-surface rounded-xl overflow-hidden border border-brand-surface-light flex items-center justify-center relative group shadow-2xl">
+               <div *ngIf="!safeVideoUrl" class="text-brand-text-muted flex flex-col items-center">
+                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12 mb-2 opacity-50"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15.91 11.672a.375.375 0 010 .656l-5.603 3.113a.375.375 0 01-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112z" /></svg>
+                 <span class="text-sm">Video no disponible</span>
+               </div>
+               <iframe *ngIf="safeVideoUrl" [src]="safeVideoUrl" class="w-full h-full" title="Video de ejercicio" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+          </section>
+
+        </div>
+
+        <div *ngIf="activeTab === 'history'" class="space-y-6 animate-fade-in">
+          <div *ngIf="exercise.history?.length; else noHistory">
+            <div class="relative border-l-2 border-brand-surface-light ml-3 space-y-8">
+              <div *ngFor="let log of exercise.history" class="relative pl-8">
+                <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-brand-black border-2 border-brand-primary"></div>
+                <h3 class="text-white font-bold text-lg mb-2">{{ log.date }}</h3>
+                <div class="bg-brand-surface rounded-xl border border-brand-surface-light overflow-hidden">
+                  <div class="grid grid-cols-3 bg-brand-surface-light/30 p-2 text-xs font-bold text-brand-text-muted uppercase text-center">
+                    <span>Serie</span>
+                    <span>Peso</span>
+                    <span>Reps</span>
+                  </div>
+                  <div *ngFor="let set of log.sets; let i = index" class="grid grid-cols-3 p-3 text-center border-t border-brand-surface-light/50 hover:bg-brand-surface-light/20 transition-colors">
+                    <span class="text-brand-text-muted font-mono">{{ i + 1 }}</span>
+                    <span class="text-white font-bold">{{ set.weight }} <span class="text-xs font-normal text-brand-text-muted">kg</span></span>
+                    <span class="text-white font-bold">{{ set.reps }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <ng-template #noHistory>
+            <div class="flex flex-col items-center justify-center py-20 text-brand-text-muted">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16 mb-4 opacity-30"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <p>Aún no has realizado este ejercicio.</p>
+            </div>
+          </ng-template>
+        </div>
+
+        <div *ngIf="activeTab === 'charts'" class="animate-fade-in flex flex-col items-center justify-center py-20 text-brand-text-muted">
+          <div class="w-full h-48 bg-brand-surface border border-brand-surface-light rounded-xl flex items-end justify-between p-4 mb-4">
+             <div class="w-8 bg-brand-surface-light h-1/4 rounded-t"></div>
+             <div class="w-8 bg-brand-surface-light h-2/4 rounded-t"></div>
+             <div class="w-8 bg-brand-primary/50 h-3/4 rounded-t"></div>
+             <div class="w-8 bg-brand-primary h-full rounded-t shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
+             <div class="w-8 bg-brand-surface-light h-2/3 rounded-t"></div>
+          </div>
+          <p class="text-sm">Próximamente: Gráficas detalladas de 1RM y Volumen.</p>
+        </div>
+
+      </div>
+
+    </div>
+    
+    <ng-template #loadingTemplate>
+      <div class="flex-1 flex items-center justify-center text-brand-text-muted">
+        Cargando ejercicio...
+      </div>
+    </ng-template>
+
+  </main>
+</div>

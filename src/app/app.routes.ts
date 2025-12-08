@@ -6,6 +6,7 @@ import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { ProfileComponent } from './features/profile/profile.component';
 import { ExerciseListComponent } from './features/exercises/exercise-list/exercise-list.component';
 import { ExerciseCreateComponent } from './features/exercises/exercise-create/exercise-create.component';
+import { ExerciseDetailComponent } from './features/exercises/exercise-detail/exercise-detail.component';
 
 export const routes: Routes = [
   { path: '', component: LandingComponent },
@@ -15,6 +16,7 @@ export const routes: Routes = [
   { path: 'profile', component: ProfileComponent },
   { path: 'exercises', component: ExerciseListComponent },
   { path: 'exercises/create', component: ExerciseCreateComponent },
+  { path: 'exercises/:id', component: ExerciseDetailComponent },
   // Redirección por defecto (opcional, pero recomendada)
   { path: '**', redirectTo: '' }
 ];
