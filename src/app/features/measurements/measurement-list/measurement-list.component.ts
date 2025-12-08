@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MeasurementService } from '../../../core/services/measurement.service';
 import { MeasurementLog, METRIC_LABELS } from '../../../core/models/measurement.model';
@@ -13,16 +13,17 @@ import { MeasurementLog, METRIC_LABELS } from '../../../core/models/measurement.
 })
 export class MeasurementListComponent implements OnInit {
   logs: MeasurementLog[] = [];
-  
-  // Métrica seleccionada actualmente
   selectedMetricKey: string = 'weight';
   metricLabels = METRIC_LABELS;
   metricKeys = Object.keys(METRIC_LABELS);
-
-  // Datos para la gráfica simple (SVG)
+  
   chartPoints: string = '';
+  showFilterModal = false; // Control del modal
 
-  constructor(private measurementService: MeasurementService) {}
+  constructor(
+    private measurementService: MeasurementService, 
+    private router: Router
+  ) {}
 
   ngOnInit() {
     this.measurementService.getHistory().subscribe(data => {
@@ -31,15 +32,23 @@ export class MeasurementListComponent implements OnInit {
     });
   }
 
+  // Abrir detalle al hacer clic en el historial
+  viewDetails(id: string) {
+    this.router.navigate(['/measurements', id]);
+  }
+
+  // Lógica del Modal
+  openFilterModal() { this.showFilterModal = true; }
+  closeFilterModal() { this.showFilterModal = false; }
+
   selectMetric(key: string) {
     this.selectedMetricKey = key;
     this.generateChart();
+    this.showFilterModal = false; // Cierra modal al elegir
   }
 
-  // Generador de gráfica SVG simple
+  // ... (generateChart y getValue siguen igual que antes) ...
   generateChart() {
-    // Filtramos logs que tengan valor para la métrica seleccionada
-    // Ordenamos ascendente para la gráfica (antiguo -> nuevo)
     const data = this.logs
       .filter(l => (l.values as any)[this.selectedMetricKey] !== undefined)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
@@ -49,15 +58,11 @@ export class MeasurementListComponent implements OnInit {
       this.chartPoints = '';
       return;
     }
-
     const max = Math.max(...data);
     const min = Math.min(...data);
-    const range = max - min || 1; // Evitar división por cero
-
-    // Normalizar puntos para un SVG de 100x50
+    const range = max - min || 1;
     this.chartPoints = data.map((val, index) => {
       const x = (index / (data.length - 1)) * 100;
-      // Invertir Y porque en SVG 0 es arriba
       const y = 50 - ((val - min) / range) * 40 - 5; 
       return `${x},${y}`;
     }).join(' ');

@@ -21,6 +21,7 @@ export const routes: Routes = [
   { path: 'exercises/:id', component: ExerciseDetailComponent },
   { path: 'measurements', component: MeasurementListComponent },
   { path: 'measurements/add', component: MeasurementAddComponent },
+  { path: 'measurements/:id', component: MeasurementAddComponent },
   // Redirección por defecto (opcional, pero recomendada)
   { path: '**', redirectTo: '' }
 ];
