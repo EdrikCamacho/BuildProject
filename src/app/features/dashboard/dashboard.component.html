@@ -27,7 +27,7 @@
       </div>
     </header>
 
-    <div class="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8">
+    <div class="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8" (click)="closeMenu()">
       
       <div class="flex justify-between items-end mb-8">
         <div>
@@ -66,23 +66,53 @@
         </button>
       </div>
 
-      <h3 class="text-xl font-bold text-white mb-4">Mis Rutinas</h3>
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold text-white">Mis Rutinas</h3>
+      </div>
+      
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div *ngFor="let routine of routines" class="bg-brand-surface border border-brand-surface-light p-5 rounded-xl hover:border-brand-primary/30 transition-colors cursor-pointer group">
+        
+        <div *ngFor="let routine of routines" class="bg-brand-surface border border-brand-surface-light p-5 rounded-xl hover:border-brand-primary/30 transition-all cursor-pointer group relative">
+          
           <div class="flex justify-between items-start mb-4">
             <div class="bg-brand-primary/10 p-2 rounded-lg text-brand-primary group-hover:bg-brand-primary group-hover:text-white transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3" /></svg>
             </div>
-            <span class="text-xs text-brand-text-muted">{{ routine.lastPerformed }}</span>
+
+            <button (click)="toggleMenu(routine.id, $event)" class="text-brand-text-muted hover:text-white p-1 rounded-full hover:bg-brand-surface-light z-20">
+               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" /></svg>
+            </button>
+
+            <div *ngIf="activeMenuId === routine.id" class="absolute right-4 top-12 w-48 bg-brand-surface-light border border-brand-surface rounded-xl shadow-2xl py-1 z-50 animate-scale-in">
+              <button (click)="startRoutine(routine)" class="w-full text-left px-4 py-2 text-white hover:bg-brand-surface text-sm flex items-center gap-2 transition-colors">
+                <span>▶</span> Iniciar
+              </button>
+              <button (click)="renameRoutine(routine.id)" class="w-full text-left px-4 py-2 text-white hover:bg-brand-surface text-sm flex items-center gap-2 transition-colors">
+                <span>✎</span> Cambiar nombre
+              </button>
+              <button (click)="editRoutine(routine.id)" class="w-full text-left px-4 py-2 text-white hover:bg-brand-surface text-sm flex items-center gap-2 transition-colors">
+                <span>⚙</span> Editar rutina
+              </button>
+              <div class="border-t border-brand-surface my-1"></div>
+              <button (click)="deleteRoutine(routine.id)" class="w-full text-left px-4 py-2 text-red-500 hover:bg-brand-surface text-sm flex items-center gap-2 transition-colors">
+                <span>🗑</span> Eliminar
+              </button>
+            </div>
           </div>
+          
           <h4 class="text-lg font-bold text-white mb-1">{{ routine.name }}</h4>
-          <p class="text-sm text-brand-text-muted mb-4">{{ routine.exercisesCount }} Ejercicios</p>
-          <div class="flex flex-wrap gap-2">
-            <span *ngFor="let tag of routine.tags" class="text-[10px] px-2 py-1 rounded-md bg-brand-surface-light text-brand-text-muted border border-brand-surface-light/50">
-              {{ tag }}
-            </span>
-          </div>
+          <p class="text-sm text-brand-text-muted mb-4">{{ routine.exercises.length }} Ejercicios</p>
+          
+          <button (click)="startRoutine(routine)" class="w-full py-2 bg-brand-primary/10 text-brand-primary border border-brand-primary/30 rounded-lg font-bold text-sm hover:bg-brand-primary hover:text-white transition-colors">
+            Iniciar Rutina
+          </button>
         </div>
+
+        <div *ngIf="routines.length === 0" class="col-span-full flex flex-col items-center justify-center py-10 opacity-50">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16 text-brand-text-muted mb-4"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+          <p class="text-brand-text-muted">No tienes rutinas creadas aún.</p>
+        </div>
+
       </div>
 
     </div>

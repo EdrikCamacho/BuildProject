@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink, Router, ActivatedRoute } from '@angular/router';
 import { ExerciseService } from '../../../core/services/exercise.service';
 import { WorkoutService } from '../../../core/services/workout.service';
+import { RoutineService } from '../../../core/services/routine.service';
 import { Exercise, MuscleGroup } from '../../../core/models/exercise.model';
 
 @Component({
@@ -13,21 +14,18 @@ import { Exercise, MuscleGroup } from '../../../core/models/exercise.model';
   templateUrl: './exercise-list.component.html'
 })
 export class ExerciseListComponent implements OnInit {
+  // ... (variables iguales)
   allExercises: Exercise[] = [];
   filteredExercises: Exercise[] = [];
   searchTerm = '';
-
   showFilterModal = false;
   activeFilters: Set<MuscleGroup> = new Set();
   tempFilters: Set<MuscleGroup> = new Set();
-  
-  // MODOS: Selección Múltiple y Reemplazo
   isSelectionMode = false;
-  isReplaceMode = false; // Nuevo
-  replaceIndex: number | null = null; // Nuevo
-
+  isReplaceMode = false;
+  replaceIndex: number | null = null;
+  isRoutineContext = false;
   selectedExercises: Set<string> = new Set();
-
   muscleGroups = {
     primary: ['Pecho', 'Dorsales', 'Espalda', 'Lumbar', 'ABS', 'Bíceps', 'Triceps', 'Hombros', 'Cuádriceps', 'Femoral', 'Glúteos'] as MuscleGroup[],
     secondary: ['Abductores', 'Aductores', 'Antebrazos', 'Cuello', 'Gemelos', 'Trapecio'] as MuscleGroup[]
@@ -36,6 +34,7 @@ export class ExerciseListComponent implements OnInit {
   constructor(
     private exerciseService: ExerciseService,
     private workoutService: WorkoutService,
+    private routineService: RoutineService,
     private router: Router,
     private route: ActivatedRoute
   ) {}
@@ -43,8 +42,9 @@ export class ExerciseListComponent implements OnInit {
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
       this.isSelectionMode = params['mode'] === 'selection';
-      this.isReplaceMode = params['mode'] === 'replace'; // Detectar reemplazo
+      this.isReplaceMode = params['mode'] === 'replace';
       this.replaceIndex = params['replaceIndex'] ? +params['replaceIndex'] : null;
+      this.isRoutineContext = params['context'] === 'routine'; // LEEMOS EL CONTEXTO
     });
 
     this.exerciseService.getExercises().subscribe(data => {
@@ -53,40 +53,65 @@ export class ExerciseListComponent implements OnInit {
     });
   }
 
-  // --- LÓGICA DE SELECCIÓN Y REEMPLAZO ---
-  onExerciseSelect(exercise: Exercise) {
-    if (this.isReplaceMode && this.replaceIndex !== null) {
-      // CASO REEMPLAZAR
-      this.workoutService.replaceExercise(this.replaceIndex, exercise);
-      this.router.navigate(['/tracker']);
-    } else if (this.isSelectionMode) {
-      // CASO SELECCIÓN MÚLTIPLE
-      this.toggleExerciseSelection(exercise);
+  // --- CORRECCIÓN EN CANCELAR ---
+  cancelSelection() {
+    if (this.isRoutineContext) {
+      this.router.navigate(['/routines/create']); // Volver a Crear Rutina
     } else {
-      // CASO NORMAL: Ver detalles sin salir
-      this.goToDetails(exercise.id!, null);
+      this.router.navigate(['/tracker']); // Volver al Tracker
     }
   }
 
-  // ... (el resto de funciones como toggleExerciseSelection, filterExercises, etc. siguen igual que en tu archivo actual) ...
-  // Solo asegúrate de copiar todo el archivo si tienes dudas.
+  // --- CORRECCIÓN AL IR A DETALLES ---
+  goToDetails(id: string, event: Event | null) {
+    if(event) event.stopPropagation();
+    
+    // Determinamos el valor de returnTo basado en el estado actual
+    let returnToValue = null;
+    if (this.isSelectionMode) returnToValue = 'selection';
+    if (this.isReplaceMode) returnToValue = 'replace';
+
+    // Navegamos pasando TAMBIÉN el contexto (routine o null)
+    this.router.navigate(['/exercises', id], { 
+      queryParams: { 
+        returnTo: returnToValue,
+        context: this.isRoutineContext ? 'routine' : null, // PASAMOS EL CONTEXTO
+        replaceIndex: this.replaceIndex // Pasamos el índice si es reemplazo
+      } 
+    });
+  }
+
+  // ... (Resto de funciones onExerciseSelect, toggleExerciseSelection, isSelected, confirmSelection, filterExercises, modales, etc. SIGUEN IGUAL) ...
+  
+  onExerciseSelect(exercise: Exercise) {
+    if (this.isReplaceMode && this.replaceIndex !== null) {
+      this.workoutService.replaceExercise(this.replaceIndex, exercise);
+      this.router.navigate(['/tracker']);
+    } else if (this.isSelectionMode) {
+      this.toggleExerciseSelection(exercise);
+    } else {
+      this.goToDetails(exercise.id!, null);
+    }
+  }
   
   toggleExerciseSelection(exercise: Exercise) {
     if (!this.isSelectionMode || !exercise.id) return;
-    if (this.selectedExercises.has(exercise.id)) {
-      this.selectedExercises.delete(exercise.id);
-    } else {
-      this.selectedExercises.add(exercise.id);
-    }
+    this.selectedExercises.has(exercise.id) ? this.selectedExercises.delete(exercise.id) : this.selectedExercises.add(exercise.id);
   }
   isSelected(exercise: Exercise): boolean { return !!exercise.id && this.selectedExercises.has(exercise.id); }
   
   confirmSelection() {
     const selected = this.allExercises.filter(ex => ex.id && this.selectedExercises.has(ex.id));
-    selected.forEach(ex => this.workoutService.addExercise(ex));
-    this.router.navigate(['/tracker']);
+    if (this.isRoutineContext) {
+      this.routineService.addExercisesToDraft(selected);
+      this.router.navigate(['/routines/create']); 
+    } else {
+      selected.forEach(ex => this.workoutService.addExercise(ex));
+      this.router.navigate(['/tracker']);
+    }
   }
-
+  
+  // ... Filtros y modales igual ...
   filterExercises() {
     this.filteredExercises = this.allExercises.filter(ex => {
       const matchesSearch = ex.name.toLowerCase().includes(this.searchTerm.toLowerCase());
@@ -94,7 +119,6 @@ export class ExerciseListComponent implements OnInit {
       return matchesSearch && matchesMuscle;
     });
   }
-
   openFilterModal() { this.tempFilters = new Set(this.activeFilters); this.showFilterModal = true; }
   closeFilterModal() { this.showFilterModal = false; }
   toggleMuscle(muscle: MuscleGroup) { this.tempFilters.has(muscle) ? this.tempFilters.delete(muscle) : this.tempFilters.add(muscle); }
@@ -103,9 +127,4 @@ export class ExerciseListComponent implements OnInit {
   get activeFiltersArray(): MuscleGroup[] { return Array.from(this.activeFilters); }
   removeFilter(muscle: MuscleGroup) { this.activeFilters.delete(muscle); this.filterExercises(); }
   createCustomExercise() { this.router.navigate(['/exercises/create']); }
-  
-  goToDetails(id: string, event: Event | null) {
-    if(event) event.stopPropagation();
-    this.router.navigate(['/exercises', id]);
-  }
 }

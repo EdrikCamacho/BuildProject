@@ -16,6 +16,7 @@ import { SettingsComponent } from './features/settings/settings.component';
 import { AccountComponent } from './features/settings/account/account.component';
 import { ChangeEmailComponent } from './features/settings/account/change-email/change-email.component';
 import { ChangePasswordComponent } from './features/settings/account/change-password/change-password.component';
+import { RoutineCreateComponent } from './features/routines/routine-create/routine-create.component';
 
 export const routes: Routes = [
   { path: '', component: LandingComponent },
@@ -24,6 +25,8 @@ export const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent },
   { path: 'tracker', component: ActiveWorkoutComponent },
   { path: 'tracker/summary', component: WorkoutSummaryComponent },
+  { path: 'routines/create', component: RoutineCreateComponent },
+  { path: 'routines/create/:id', component: RoutineCreateComponent },
   { path: 'profile', component: ProfileComponent },
   { path: 'profile/edit', component: ProfileEditComponent },
   { path: 'settings', component: SettingsComponent },

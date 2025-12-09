@@ -1,8 +1,8 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core'; // 1. IMPORTAR ChangeDetectorRef
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs'; // 2. IMPORTAR Subscription
+import { Subscription } from 'rxjs';
 import { WorkoutService } from '../../../core/services/workout.service';
 import { ActiveWorkout, WorkoutSet } from '../../../core/models/workout.model';
 
@@ -18,7 +18,6 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
   showRestSettings = false;
   restOptions = [30, 60, 90, 120, 180, 300]; 
   
-  // Variable para guardar la suscripción
   private timerSubscription: Subscription | undefined;
 
   get workout(): ActiveWorkout | null { return this.workoutService.activeWorkout; }
@@ -30,29 +29,26 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router, 
     public workoutService: WorkoutService,
-    private cdr: ChangeDetectorRef // 3. INYECTAR DETECTOR DE CAMBIOS
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
     if (!this.workoutService.activeWorkout) {
       this.router.navigate(['/dashboard']);
-      return; // Importante detener si no hay workout
+      return;
     }
 
-    // 4. SUSCRIBIRSE AL LATIDO DEL SERVICIO
-    // Cada vez que el servicio diga "next()", actualizamos la vista manualmente
     this.timerSubscription = this.workoutService.timerTick$.subscribe(() => {
       this.cdr.detectChanges();
     });
   }
 
   ngOnDestroy() {
-    // 5. LIMPIAR SUSCRIPCIÓN AL SALIR
     if (this.timerSubscription) {
       this.timerSubscription.unsubscribe();
     }
   }
-  
+
   toggleMenu(index: number, event: Event) {
     event.stopPropagation();
     this.activeMenuIndex = this.activeMenuIndex === index ? null : index;
@@ -114,8 +110,10 @@ export class ActiveWorkoutComponent implements OnInit, OnDestroy {
 
   addExercise() { this.router.navigate(['/exercises'], { queryParams: { mode: 'selection' } }); }
   
-  finishWorkout() {
-    this.router.navigate(['/tracker/summary']);
+  finishWorkout() { 
+    // SOLO NAVEGA, NO DETIENE EL ENTRENAMIENTO
+    this.router.navigate(['/tracker/summary']); 
   }
+  
   cancelWorkout() { if(confirm('¿Descartar?')) { this.workoutService.stopWorkout(); this.router.navigate(['/dashboard']); } }
 }

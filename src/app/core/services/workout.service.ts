@@ -1,41 +1,32 @@
 import { Injectable } from '@angular/core';
-import { Subject } from 'rxjs'; // 1. IMPORTAR SUBJECT
+import { Subject } from 'rxjs';
 import { ActiveWorkout, WorkoutExercise } from '../models/workout.model';
 import { Exercise } from '../models/exercise.model';
+import { Routine } from '../models/routine.model'; // IMPORTAR ROUTINE
 
 @Injectable({
   providedIn: 'root'
 })
 export class WorkoutService {
+  // ... (variables anteriores igual) ...
   activeWorkout: ActiveWorkout | null = null;
   private workoutTimerInterval: any;
-
-  // Descanso
   restTimerInterval: any;
   isResting = false;
   restDurationRemaining = 0;
   defaultRestSeconds = 90;
   private timerSound = new Audio('assets/sounds/timer-beep.mp3');
-
-  // 2. CREAR EL "LATIDO" DEL RELOJ
-  // Esto servirá para avisar al componente que actualice la vista
   timerTick$ = new Subject<void>();
 
   constructor() {
     this.loadFromStorage();
   }
 
-  // ... (saveToStorage, loadFromStorage, startNewWorkout, stopWorkout, addExercise, remove, replace SIGUEN IGUAL) ...
-  // Copia tus funciones anteriores de gestión de datos aquí, no cambian.
-  
+  // ... (métodos privados load/save storage igual) ...
   private saveToStorage() {
-    if (this.activeWorkout) {
-      localStorage.setItem('active_workout', JSON.stringify(this.activeWorkout));
-    } else {
-      localStorage.removeItem('active_workout');
-    }
+    if (this.activeWorkout) localStorage.setItem('active_workout', JSON.stringify(this.activeWorkout));
+    else localStorage.removeItem('active_workout');
   }
-
   private loadFromStorage() {
     const saved = localStorage.getItem('active_workout');
     if (saved) {
@@ -47,19 +38,42 @@ export class WorkoutService {
     }
   }
 
-  startNewWorkout(name: string = 'Entrenamiento Libre') {
+  // MODIFICADO: Acepta una Rutina opcional
+  startNewWorkout(routine?: Routine) {
     this.stopRestTimer();
+    
+    // Si hay rutina, convertimos sus ejercicios a formato de entrenamiento
+    let exercises: WorkoutExercise[] = [];
+    let name = 'Entrenamiento Libre';
+
+    if (routine) {
+      name = routine.name;
+      exercises = routine.exercises.map(rex => ({
+        tempId: Date.now().toString() + Math.random(),
+        exercise: rex.exercise,
+        sets: rex.sets.map((s, i) => ({
+           id: i + 1,
+           type: s.type,
+           weight: s.weight || null,
+           reps: s.reps || null,
+           completed: false
+        })),
+        notes: rex.notes
+      }));
+    }
+
     this.activeWorkout = {
       name,
       startTime: new Date(),
       durationSeconds: 0,
-      exercises: [],
+      exercises,
       volume: 0
     };
     this.saveToStorage();
     this.startWorkoutTimer();
   }
 
+  // ... (resto de funciones stopWorkout, addExercise, etc. IGUAL que antes) ...
   stopWorkout() {
     this.activeWorkout = null;
     this.saveToStorage();
@@ -92,27 +106,17 @@ export class WorkoutService {
 
   updateRestTime(newSeconds: number) {
     this.defaultRestSeconds = newSeconds;
-    if (this.isResting) {
-       this.restDurationRemaining = newSeconds;
-    }
+    if (this.isResting) this.restDurationRemaining = newSeconds;
   }
 
-  // --- TIMERS (AQUÍ ESTÁ EL CAMBIO IMPORTANTE) ---
-  
   startRestTimer() {
     this.stopRestTimer();
     this.isResting = true;
     this.restDurationRemaining = this.defaultRestSeconds;
-
     this.restTimerInterval = setInterval(() => {
       this.restDurationRemaining--;
-      
-      // 3. AVISAR AL COMPONENTE QUE ACTUALICE
       this.timerTick$.next();
-
-      if (this.restDurationRemaining <= 0) {
-        this.finishRestTimer();
-      }
+      if (this.restDurationRemaining <= 0) this.finishRestTimer();
     }, 1000);
   }
 
@@ -120,7 +124,6 @@ export class WorkoutService {
     if (this.restTimerInterval) clearInterval(this.restTimerInterval);
     this.isResting = false;
     this.restDurationRemaining = 0;
-    // Avisar una última vez para limpiar la UI
     this.timerTick$.next(); 
   }
 
@@ -132,7 +135,7 @@ export class WorkoutService {
   addTimeToShow(seconds: number) {
     if (this.isResting) {
       this.restDurationRemaining += seconds;
-      this.timerTick$.next(); // Avisar actualización manual
+      this.timerTick$.next();
     }
   }
 
@@ -141,10 +144,7 @@ export class WorkoutService {
     this.workoutTimerInterval = setInterval(() => {
       if (this.activeWorkout) {
         this.activeWorkout.durationSeconds++;
-        
-        // 4. AVISAR AL COMPONENTE QUE ACTUALICE
         this.timerTick$.next();
-
         if (this.activeWorkout.durationSeconds % 5 === 0) this.saveToStorage();
       }
     }, 1000);
