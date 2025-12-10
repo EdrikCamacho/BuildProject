@@ -75,19 +75,17 @@ export class WorkoutSummaryComponent implements OnInit, OnDestroy {
   saveWorkout() {
     if (this.workout) {
       this.workout.volume = this.totalVolume;
+      this.workout.endTime = new Date(); // Establecer fecha fin
+      
+      // NUEVO: Guardar en el historial
+      this.workoutService.saveToHistory(this.workout);
     }
 
-    console.log('Guardando...', { 
-      ...this.workout, 
-      description: this.workoutDescription,
-      endTime: new Date()
-    });
+    console.log('Guardando...', this.workout);
+    this.workoutService.stopWorkout(); // Limpiar activo
     
-    // AQUÍ SÍ PARAMOS EL ENTRENAMIENTO
-    this.workoutService.stopWorkout(); 
-    
-    alert(`¡Entrenamiento guardado!\nVolumen: ${this.totalVolume} kg`);
-    this.router.navigate(['/dashboard']);
+    alert('¡Entrenamiento guardado en tu historial!');
+    this.router.navigate(['/profile']); // Ir al perfil para verlo
   }
 
   discardWorkout() {

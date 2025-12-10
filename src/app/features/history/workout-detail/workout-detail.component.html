@@ -1,0 +1,77 @@
+<div class="flex h-screen bg-brand-black font-sans text-brand-text">
+  <main class="flex-1 flex flex-col h-full overflow-hidden relative bg-brand-black">
+    
+    <header class="bg-brand-surface border-b border-brand-surface-light p-4 z-10 flex items-center gap-4">
+      <a routerLink="/profile" class="text-brand-text-muted hover:text-white">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
+      </a>
+      <h1 class="font-bold text-lg text-white truncate">{{ workout?.name }}</h1>
+    </header>
+
+    <div class="flex-1 overflow-y-auto p-4 md:p-8 pb-8" *ngIf="workout">
+      
+      <div class="flex flex-col gap-1 mb-6">
+        <p class="text-brand-text-muted text-sm">{{ workout.endTime | date:'fullDate' }}</p>
+        <p class="text-brand-text-muted text-xs">{{ workout.endTime | date:'shortTime' }}</p>
+      </div>
+
+      <div class="grid grid-cols-3 gap-3 mb-8">
+        <div class="bg-brand-surface p-3 rounded-xl border border-brand-surface-light">
+          <p class="text-[10px] text-brand-text-muted uppercase font-bold">Tiempo</p>
+          <p class="text-white font-bold text-lg">{{ workoutService.formatTime(workout.durationSeconds) }}</p>
+        </div>
+        <div class="bg-brand-surface p-3 rounded-xl border border-brand-surface-light">
+          <p class="text-[10px] text-brand-text-muted uppercase font-bold">Volumen</p>
+          <p class="text-white font-bold text-lg">{{ workout.volume }} kg</p>
+        </div>
+        <div class="bg-brand-surface p-3 rounded-xl border border-brand-surface-light">
+          <p class="text-[10px] text-brand-text-muted uppercase font-bold">Series</p>
+          <p class="text-white font-bold text-lg">{{ totalSets }}</p>
+        </div>
+      </div>
+
+      <div *ngIf="workout.description" class="mb-8 bg-brand-surface/50 p-4 rounded-xl border border-brand-surface-light/50">
+        <p class="text-xs font-bold text-brand-text-muted uppercase mb-2">Notas</p>
+        <p class="text-sm text-white italic">"{{ workout.description }}"</p>
+      </div>
+
+      <div class="space-y-4">
+        <div *ngFor="let item of workout.exercises" class="bg-brand-surface rounded-xl border border-brand-surface-light overflow-hidden">
+          
+          <div class="p-4 border-b border-brand-surface-light bg-brand-surface-light/10 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-brand-surface-light flex items-center justify-center text-brand-text-muted font-bold text-lg">
+              {{ item.exercise.name.charAt(0) }}
+            </div>
+            <div>
+              <h3 class="font-bold text-white">{{ item.exercise.name }}</h3>
+              <p class="text-xs text-brand-text-muted">{{ item.exercise.muscle }}</p>
+            </div>
+          </div>
+
+          <div class="p-2">
+            <table class="w-full text-sm text-center">
+              <thead class="text-xs text-brand-text-muted font-bold uppercase">
+                <tr>
+                  <th class="py-2">Set</th>
+                  <th class="py-2">Kg</th>
+                  <th class="py-2">Reps</th>
+                </tr>
+              </thead>
+              <tbody class="text-white">
+                <tr *ngFor="let set of item.sets; let i = index" [class.opacity-50]="!set.completed">
+                  <td class="py-2">
+                    <span class="inline-block w-6 h-6 rounded-full text-xs leading-6 font-bold" [ngClass]="set.completed ? 'bg-brand-primary/20 text-brand-primary' : 'bg-brand-surface-light text-brand-text-muted'">{{ i + 1 }}</span>
+                  </td>
+                  <td class="py-2 font-bold">{{ set.weight || '-' }}</td>
+                  <td class="py-2 font-bold">{{ set.reps || '-' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>

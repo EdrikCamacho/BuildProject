@@ -17,6 +17,7 @@ import { AccountComponent } from './features/settings/account/account.component'
 import { ChangeEmailComponent } from './features/settings/account/change-email/change-email.component';
 import { ChangePasswordComponent } from './features/settings/account/change-password/change-password.component';
 import { RoutineCreateComponent } from './features/routines/routine-create/routine-create.component';
+import { WorkoutDetailComponent } from './features/history/workout-detail/workout-detail.component';
 
 export const routes: Routes = [
   { path: '', component: LandingComponent },
@@ -39,6 +40,7 @@ export const routes: Routes = [
   { path: 'measurements', component: MeasurementListComponent },
   { path: 'measurements/add', component: MeasurementAddComponent },
   { path: 'measurements/:id', component: MeasurementAddComponent },
+  { path: 'history/:id', component: WorkoutDetailComponent },
   // Redirección por defecto (opcional, pero recomendada)
   { path: '**', redirectTo: '' }
 ];

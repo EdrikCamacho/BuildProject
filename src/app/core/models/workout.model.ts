@@ -9,16 +9,19 @@ export interface WorkoutSet {
 }
 
 export interface WorkoutExercise {
-  tempId: string; // ID temporal para manejarlo en la UI
+  tempId: string;
   exercise: Exercise;
   sets: WorkoutSet[];
   notes?: string;
 }
 
 export interface ActiveWorkout {
+  id?: string; // NUEVO: ID único del historial
   name: string;
   startTime: Date;
+  endTime?: Date; // NUEVO: Fecha fin
   durationSeconds: number;
   exercises: WorkoutExercise[];
   volume: number;
+  description?: string; // Para las notas finales
 }

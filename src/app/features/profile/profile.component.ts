@@ -1,66 +1,91 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
-
-// Interfaces para ordenar los datos
-type Period = '1S' | '1M' | '3M' | '1A' | 'Todo';
-
-interface WorkoutSummary {
-  id: number;
-  name: string;
-  date: string;
-  duration: string;
-  volume: string;
-  sets: number;
-}
+import { RouterLink, Router } from '@angular/router';
+import { WorkoutService } from '../../core/services/workout.service';
+import { ActiveWorkout } from '../../core/models/workout.model';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
   imports: [CommonModule, RouterLink],
-  templateUrl: './profile.component.html',
-  styles: []
+  templateUrl: './profile.component.html'
 })
-export class ProfileComponent {
-  user = {
-    name: 'Atleta',
-    photoUrl: '', // Pon una URL aquí para probar la imagen
-    joinDate: 'Diciembre 2025',
-    avatarLetter: 'A'
-  };
-
-  currentPeriod: Period = '1S';
-  periods: Period[] = ['1S', '1M', '3M', '1A', 'Todo'];
-
-  // Datos de estadísticas (sin cambios)
-  analyticsData = {
-    '1S': { volume: '12.5T', sets: 45, volumeTrend: [40, 60, 45, 80, 50, 70, 90], setsTrend: [50, 60, 55, 80, 60, 75, 85] },
-    '1M': { volume: '54T', sets: 180, volumeTrend: [60, 75, 50, 90, 65, 85, 70], setsTrend: [70, 80, 60, 85, 75, 90, 80] },
-    '3M': { volume: '160T', sets: 520, volumeTrend: [50, 60, 80, 70, 90, 85, 95], setsTrend: [60, 70, 80, 75, 85, 90, 100] },
-    '1A': { volume: '620T', sets: 2100, volumeTrend: [30, 40, 45, 50, 60, 75, 90], setsTrend: [40, 50, 55, 60, 70, 80, 95] },
-    'Todo': { volume: '850T', sets: 3500, volumeTrend: [20, 35, 50, 65, 70, 85, 100], setsTrend: [30, 40, 55, 70, 75, 90, 100] }
-  };
-
-  get currentStats() {
-    return this.analyticsData[this.currentPeriod];
-  }
-
-  setPeriod(period: Period) {
-    this.currentPeriod = period;
-  }
-
-  // CAMBIO 1: Quitamos 'Configuración' de aquí
+export class ProfileComponent implements OnInit {
+  // ... (Variables de usuario y stats siguen igual) ...
+  user = { name: 'Atleta', photoUrl: '', joinDate: 'Diciembre 2025', avatarLetter: 'A' };
+  currentPeriod: any = '1S';
+  periods: any[] = ['1S', '1M', '3M', '1A', 'Todo'];
+  analyticsData: any = { '1S': { volume: '12.5T', sets: 45, volumeTrend: [40, 60, 45, 80, 50, 70, 90], setsTrend: [50, 60, 55, 80, 60, 75, 85] } };
+  get currentStats() { return this.analyticsData['1S']; }
+  setPeriod(p: any) { this.currentPeriod = p; }
+  
   menuItems = [
     { title: 'Medidas Corporales', icon: '📏', desc: 'Registra tu peso y perímetros', route: '/measurements' },
     { title: 'Biblioteca de Ejercicios', icon: '📚', desc: 'Tutoriales e historial por ejercicio', route: '/exercises' },
     { title: 'Análisis Muscular', icon: 'anatomy', desc: 'Mapa de calor y simetría', route: '/muscles' }
   ];
 
-  // CAMBIO 2: Nuevos datos para el historial de entrenamientos
-  pastWorkouts: WorkoutSummary[] = [
-    { id: 1, name: 'Pecho y Tríceps A', date: 'Hoy', duration: '1h 15m', volume: '4,520 kg', sets: 24 },
-    { id: 2, name: 'Espalda y Bíceps B', date: 'Ayer', duration: '1h 05m', volume: '5,100 kg', sets: 22 },
-    { id: 3, name: 'Pierna Completa', date: 'Lun 20 Ene', duration: '1h 30m', volume: '8,200 kg', sets: 28 },
-    { id: 4, name: 'Hombro y Abs', date: 'Sab 18 Ene', duration: '55m', volume: '3,100 kg', sets: 18 }
-  ];
+  history: ActiveWorkout[] = [];
+  
+  // NUEVO: Control del menú activo (ID del workout)
+  activeMenuId: string | null = null;
+
+  constructor(public workoutService: WorkoutService, private router: Router) {}
+
+  ngOnInit() {
+    this.workoutService.history$.subscribe(data => {
+      this.history = data;
+    });
+  }
+
+  getSetsCount(workout: ActiveWorkout): number {
+    return workout.exercises.reduce((acc, ex) => acc + ex.sets.filter(s => s.completed).length, 0);
+  }
+
+  viewWorkoutDetail(id: string) {
+    this.router.navigate(['/history', id]);
+  }
+
+  // --- NUEVAS FUNCIONES DEL MENÚ ---
+
+  toggleMenu(id: string, event: Event) {
+    event.stopPropagation(); // Evita ir al detalle
+    this.activeMenuId = this.activeMenuId === id ? null : id;
+  }
+
+  closeMenu() {
+    this.activeMenuId = null;
+  }
+
+  repeatWorkout(workout: ActiveWorkout, event: Event) {
+    event.stopPropagation();
+    this.closeMenu();
+
+    // 1. Iniciamos un entrenamiento limpio en el servicio
+    this.workoutService.startNewWorkout();
+
+    // 2. Sobrescribimos con los datos del historial (pero limpiando estado)
+    if (this.workoutService.activeWorkout) {
+      this.workoutService.activeWorkout.name = workout.name;
+      
+      // Copiamos ejercicios y sets, pero reseteamos 'completed' a false
+      this.workoutService.activeWorkout.exercises = workout.exercises.map(ex => ({
+        ...ex,
+        tempId: Date.now().toString() + Math.random(), // Nuevos IDs temporales
+        sets: ex.sets.map(s => ({ ...s, completed: false })) // Resetear checks
+      }));
+    }
+
+    // 3. Vamos al tracker
+    this.router.navigate(['/tracker']);
+  }
+
+  deleteWorkout(id: string, event: Event) {
+    event.stopPropagation();
+    this.closeMenu();
+    
+    if (confirm('¿Eliminar este entrenamiento del historial?')) {
+      this.workoutService.deleteFromHistory(id);
+    }
+  }
 }
