@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../node_modules/@prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model body_measurements {
+  id                  String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id             String?   @db.Uuid
+  date                DateTime? @default(dbgenerated("CURRENT_DATE")) @db.Date
+  weight_kg           Decimal?  @db.Decimal(5, 2)
+  height_cm           Decimal?  @db.Decimal(5, 2)
+  body_fat_percentage Decimal?  @db.Decimal(4, 1)
+  chest_cm            Decimal?  @db.Decimal(5, 2)
+  arms_cm             Decimal?  @db.Decimal(5, 2)
+  waist_cm            Decimal?  @db.Decimal(5, 2)
+  legs_cm             Decimal?  @db.Decimal(5, 2)
+  created_at          DateTime? @default(now()) @db.Timestamptz(6)
+  users               users?    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model exercises {
+  id                 String              @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name               String              @db.VarChar(100)
+  muscle_group       String              @db.VarChar(50)
+  equipment          String?             @db.VarChar(50)
+  image_url          String?
+  video_url          String?
+  description        String?
+  is_custom          Boolean?            @default(false)
+  created_by_user_id String?             @db.Uuid
+  created_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  users              users?              @relation(fields: [created_by_user_id], references: [id], onUpdate: NoAction)
+  routine_exercises  routine_exercises[]
+  workout_exercises  workout_exercises[]
+}
+
+model routine_exercises {
+  id           String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  routine_id   String?        @db.Uuid
+  exercise_id  String?        @db.Uuid
+  order_index  Int
+  notes        String?
+  exercises    exercises?     @relation(fields: [exercise_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  routines     routines?      @relation(fields: [routine_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  routine_sets routine_sets[]
+}
+
+model routine_sets {
+  id                  String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  routine_exercise_id String?            @db.Uuid
+  type                String?            @default("normal") @db.VarChar(20)
+  target_reps         Int?
+  order_index         Int
+  routine_exercises   routine_exercises? @relation(fields: [routine_exercise_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model routines {
+  id                String              @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id           String?             @db.Uuid
+  name              String              @db.VarChar(100)
+  description       String?
+  created_at        DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime?           @default(now()) @db.Timestamptz(6)
+  routine_exercises routine_exercises[]
+  users             users?              @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model users {
+  id                String              @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  email             String              @unique @db.VarChar(255)
+  password_hash     String              @db.VarChar(255)
+  username          String              @unique @db.VarChar(50)
+  full_name         String?             @db.VarChar(100)
+  avatar_url        String?
+  created_at        DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime?           @default(now()) @db.Timestamptz(6)
+  body_measurements body_measurements[]
+  exercises         exercises[]
+  routines          routines[]
+  workouts          workouts[]
+}
+
+model workout_exercises {
+  id           String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  workout_id   String?        @db.Uuid
+  exercise_id  String?        @db.Uuid
+  order_index  Int
+  notes        String?
+  exercises    exercises?     @relation(fields: [exercise_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  workouts     workouts?      @relation(fields: [workout_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  workout_sets workout_sets[]
+}
+
+model workout_sets {
+  id                  String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  workout_exercise_id String?            @db.Uuid
+  type                String?            @default("normal") @db.VarChar(20)
+  weight_kg           Decimal?           @db.Decimal(6, 2)
+  reps                Int?
+  is_completed        Boolean?           @default(false)
+  order_index         Int
+  workout_exercises   workout_exercises? @relation(fields: [workout_exercise_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model workouts {
+  id                String              @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id           String?             @db.Uuid
+  name              String              @db.VarChar(100)
+  start_time        DateTime            @db.Timestamptz(6)
+  end_time          DateTime?           @db.Timestamptz(6)
+  duration_seconds  Int?                @default(0)
+  volume_kg         Decimal?            @default(0) @db.Decimal(10, 2)
+  notes             String?
+  created_at        DateTime?           @default(now()) @db.Timestamptz(6)
+  workout_exercises workout_exercises[]
+  users             users?              @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
