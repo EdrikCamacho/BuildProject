@@ -40,14 +40,14 @@ export class AuthService {
     this.router.navigate(['/']);
   }
 
-  async updateUserData(displayName: string, photoURL: string | null): Promise<void> {
+  async updateUserData(displayName: string): Promise<void> {
     const currentUser = this.auth.currentUser;
     if (!currentUser) throw new Error("No hay usuario");
 
     try {
+      // Solo actualizamos el nombre (displayName)
       await updateProfile(currentUser, {
-        displayName: displayName,
-        photoURL: photoURL
+        displayName: displayName
       });
     } catch (error) {
       console.error("Error de Firebase:", error);
