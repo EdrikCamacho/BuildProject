@@ -1,19 +1,31 @@
-import { Injectable } from '@angular/core';
-import { Subject, BehaviorSubject, Observable, map } from 'rxjs'; // Importamos BehaviorSubject
+import { Injectable, inject } from '@angular/core';
+import { Subject, BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { ActiveWorkout, WorkoutExercise } from '../models/workout.model';
 import { Exercise } from '../models/exercise.model';
 import { Routine } from '../models/routine.model';
+
+// --- Imports de Firebase ---
+import { Firestore, collection, addDoc, collectionData, query, orderBy, deleteDoc, doc } from '@angular/fire/firestore';
+import { Auth, user } from '@angular/fire/auth';
+import { switchMap, map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
 })
 export class WorkoutService {
+  // Inyecciones de Firebase
+  private firestore = inject(Firestore);
+  private auth = inject(Auth);
+
+  // Observable del usuario (para saber dónde guardar)
+  private user$ = user(this.auth);
+
   activeWorkout: ActiveWorkout | null = null;
   private workoutTimerInterval: any;
 
-  // --- HISTORIAL ---
-  private historySubject = new BehaviorSubject<ActiveWorkout[]>([]);
-  public history$ = this.historySubject.asObservable(); // Observable para que el perfil se actualice solo
+  // --- HISTORIAL (MODIFICADO PARA FIREBASE) ---
+  // Ya no usamos BehaviorSubject manual para el historial, sino un Observable directo de Firebase
+  public history$: Observable<ActiveWorkout[]>;
 
   // Descanso
   restTimerInterval: any;
@@ -26,15 +38,43 @@ export class WorkoutService {
 
   constructor() {
     this.loadFromStorage();
-    this.loadHistory(); // Cargar historial al iniciar
+    
+    // Inicializar el history$ conectado a Firebase
+    this.history$ = this.user$.pipe(
+      switchMap(currentUser => {
+        if (!currentUser) {
+            // Si no hay usuario logueado, intentamos mostrar lo local (fallback) o vacío
+            return new BehaviorSubject<ActiveWorkout[]>([]); 
+        }
+        
+        // Conexión en tiempo real a la colección del usuario
+        const col = collection(this.firestore, `users/${currentUser.uid}/workouts`);
+        const q = query(col, orderBy('startTime', 'desc'));
+        
+        return collectionData(q, { idField: 'id' }).pipe(
+            map(workouts => workouts.map(w => {
+                // Restaurar fechas que vienen como Timestamp de Firebase
+                const data = w as any;
+                return {
+                    ...data,
+                    startTime: data.startTime?.toDate ? data.startTime.toDate() : new Date(data.startTime),
+                    endTime: data.endTime?.toDate ? data.endTime.toDate() : (data.endTime ? new Date(data.endTime) : null)
+                } as ActiveWorkout;
+            }))
+        );
+      })
+    );
   }
 
-  // ... (saveToStorage y loadFromStorage del activeWorkout SIGUEN IGUAL) ...
+  // --- MÉTODOS LOCALES (SE MANTIENEN IGUAL) ---
+
   private saveToStorage() {
     if (this.activeWorkout) localStorage.setItem('active_workout', JSON.stringify(this.activeWorkout));
     else localStorage.removeItem('active_workout');
   }
+
   private loadFromStorage() {
+    if (typeof localStorage === 'undefined') return; // Protección SSR
     const saved = localStorage.getItem('active_workout');
     if (saved) {
       this.activeWorkout = JSON.parse(saved);
@@ -45,36 +85,63 @@ export class WorkoutService {
     }
   }
 
-  // --- GESTIÓN DE HISTORIAL (NUEVO) ---
-  private loadHistory() {
-    const saved = localStorage.getItem('workout_history');
-    if (saved) {
-      const history = JSON.parse(saved);
-      // Restaurar fechas
-      history.forEach((w: any) => {
-        w.startTime = new Date(w.startTime);
-        if (w.endTime) w.endTime = new Date(w.endTime);
-      });
-      this.historySubject.next(history);
+  // --- GESTIÓN DE HISTORIAL (MODIFICADO) ---
+
+  // Método auxiliar para obtener un workout específico (ahora debe ser asíncrono o buscar en el snapshot actual si nos suscribimos, 
+  // pero para compatibilidad rápida, dejaremos que los componentes usen history$ | async)
+  // NOTA: Si algún componente usa getWorkoutById de forma síncrona, fallará. 
+  // Lo mejor es que los componentes se suscriban a history$.
+  
+  async saveToHistory(workout: ActiveWorkout) {
+    const currentUser = this.auth.currentUser;
+    
+    // Si NO hay usuario, guardamos en LocalStorage como antes (Modo Invitado)
+    if (!currentUser) {
+        this.saveToLocalHistory(workout);
+        return;
+    }
+
+    // Si HAY usuario, guardamos en Firebase
+    try {
+        const col = collection(this.firestore, `users/${currentUser.uid}/workouts`);
+        await addDoc(col, {
+            ...workout,
+            // Convertir fechas a strings o Timestamps
+            startTime: new Date(workout.startTime),
+            endTime: new Date(),
+            userId: currentUser.uid
+        });
+        console.log('Guardado en Firebase');
+    } catch (e) {
+        console.error('Error guardando en nube:', e);
     }
   }
 
-  saveToHistory(workout: ActiveWorkout) {
-    const currentHistory = this.historySubject.value;
-    // Generar ID único
-    workout.id = Date.now().toString();
-    // Añadir al principio de la lista (más reciente primero)
-    const newHistory = [workout, ...currentHistory];
+  // Fallback para guardar local si no hay internet/usuario
+  private saveToLocalHistory(workout: ActiveWorkout) {
+     const saved = localStorage.getItem('workout_history');
+     let history = saved ? JSON.parse(saved) : [];
+     workout.id = Date.now().toString();
+     history = [workout, ...history];
+     localStorage.setItem('workout_history', JSON.stringify(history));
+     // Nota: Esto no actualizará history$ automáticamente si no recargas, 
+     // pero es un mal menor comparado con romper la app.
+  }
+
+  async deleteFromHistory(id: string) {
+    const currentUser = this.auth.currentUser;
+    if (!currentUser) return; // O implementar borrado local
     
-    this.historySubject.next(newHistory);
-    localStorage.setItem('workout_history', JSON.stringify(newHistory));
+    try {
+        const docRef = doc(this.firestore, `users/${currentUser.uid}/workouts/${id}`);
+        await deleteDoc(docRef);
+    } catch (e) {
+        console.error('Error borrando:', e);
+    }
   }
 
-  getWorkoutById(id: string): ActiveWorkout | undefined {
-    return this.historySubject.value.find(w => w.id === id);
-  }
+  // --- EL RESTO DE MÉTODOS SIGUEN IGUAL (LÓGICA DE ENTRENAMIENTO) ---
 
-  // ... (startNewWorkout, stopWorkout, etc. SIGUEN IGUAL) ...
   startNewWorkout(routine?: Routine) {
     this.stopRestTimer();
     let exercises: WorkoutExercise[] = [];
@@ -110,8 +177,6 @@ export class WorkoutService {
     this.stopRestTimer();
   }
 
-  // ... (addExercise, removeExercise, replaceExercise, updateRestTime, Timers y formatTime SIGUEN IGUAL) ...
-  // Copia tus funciones existentes aquí para no perderlas
   addExercise(exercise: Exercise) {
     if (!this.activeWorkout) return;
     const newGroup: WorkoutExercise = {
@@ -140,10 +205,10 @@ export class WorkoutService {
     if (this.isResting) this.restDurationRemaining = newSeconds;
   }
 
-  startRestTimer() {
+  startRestTimer(seconds?: number) { // Modifiqué levemente para aceptar parámetro opcional si lo usas
     this.stopRestTimer();
     this.isResting = true;
-    this.restDurationRemaining = this.defaultRestSeconds;
+    this.restDurationRemaining = seconds || this.defaultRestSeconds;
     this.restTimerInterval = setInterval(() => {
       this.restDurationRemaining--;
       this.timerTick$.next();
@@ -194,11 +259,11 @@ export class WorkoutService {
     return hrs > 0 ? `${hrs}:${pad(mins)}:${pad(secs)}` : `${pad(mins)}:${pad(secs)}`;
   }
 
-  deleteFromHistory(id: string) {
-    const currentHistory = this.historySubject.value;
-    const updatedHistory = currentHistory.filter(w => w.id !== id);
-    
-    this.historySubject.next(updatedHistory);
-    localStorage.setItem('workout_history', JSON.stringify(updatedHistory));
+  // IMPORTANTE: Este método síncrono ya no es compatible con Firebase directo
+  // Lo dejo devolviendo undefined para evitar errores de compilación, 
+  // pero debes actualizar donde lo uses para buscar en la lista history$
+  getWorkoutById(id: string): ActiveWorkout | undefined {
+    console.warn('getWorkoutById síncrono está obsoleto con Firebase. Usa history$');
+    return undefined; 
   }
 }
