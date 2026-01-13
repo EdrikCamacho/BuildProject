@@ -1,30 +1,29 @@
-import { Injectable, inject } from '@angular/core';
-import { Subject, BehaviorSubject, Observable, Subscription } from 'rxjs';
+import { Injectable, inject, PLATFORM_ID, Inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { Subject, BehaviorSubject, Observable, of } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 import { ActiveWorkout, WorkoutExercise } from '../models/workout.model';
 import { Exercise } from '../models/exercise.model';
 import { Routine } from '../models/routine.model';
 
-// --- Imports de Firebase ---
+// Firebase
 import { Firestore, collection, addDoc, collectionData, query, orderBy, deleteDoc, doc } from '@angular/fire/firestore';
 import { Auth, user } from '@angular/fire/auth';
-import { switchMap, map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
 })
 export class WorkoutService {
-  // Inyecciones de Firebase
   private firestore = inject(Firestore);
   private auth = inject(Auth);
-
-  // Observable del usuario (para saber dónde guardar)
+  
+  // Observable de usuario para gestionar el historial por cuenta
   private user$ = user(this.auth);
 
   activeWorkout: ActiveWorkout | null = null;
   private workoutTimerInterval: any;
 
-  // --- HISTORIAL (MODIFICADO PARA FIREBASE) ---
-  // Ya no usamos BehaviorSubject manual para el historial, sino un Observable directo de Firebase
+  // --- HISTORIAL (Conectado a Firebase) ---
   public history$: Observable<ActiveWorkout[]>;
 
   // Descanso
@@ -32,31 +31,34 @@ export class WorkoutService {
   isResting = false;
   restDurationRemaining = 0;
   defaultRestSeconds = 90;
-  private timerSound = new Audio('assets/sounds/timer-beep.mp3');
+  
+  // Audio: Lo inicializamos como null para que no falle en el servidor
+  private timerSound: HTMLAudioElement | null = null;
   
   timerTick$ = new Subject<void>();
 
-  constructor() {
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
+    // 1. CORRECCIÓN AUDIO: Solo crear el Audio si estamos en el navegador
+    if (isPlatformBrowser(this.platformId)) {
+      this.timerSound = new Audio('assets/sounds/timer-beep.mp3');
+    }
+
     this.loadFromStorage();
     
-    // Inicializar el history$ conectado a Firebase
+    // 2. CORRECCIÓN HISTORIAL: Si no hay usuario, devuelve array vacío para no romper la UI
     this.history$ = this.user$.pipe(
       switchMap(currentUser => {
-        if (!currentUser) {
-            // Si no hay usuario logueado, intentamos mostrar lo local (fallback) o vacío
-            return new BehaviorSubject<ActiveWorkout[]>([]); 
-        }
-        
-        // Conexión en tiempo real a la colección del usuario
+        if (!currentUser) return of([]); 
+
         const col = collection(this.firestore, `users/${currentUser.uid}/workouts`);
         const q = query(col, orderBy('startTime', 'desc'));
         
         return collectionData(q, { idField: 'id' }).pipe(
             map(workouts => workouts.map(w => {
-                // Restaurar fechas que vienen como Timestamp de Firebase
                 const data = w as any;
                 return {
                     ...data,
+                    // Convertir Timestamps de Firebase a Date
                     startTime: data.startTime?.toDate ? data.startTime.toDate() : new Date(data.startTime),
                     endTime: data.endTime?.toDate ? data.endTime.toDate() : (data.endTime ? new Date(data.endTime) : null)
                 } as ActiveWorkout;
@@ -66,71 +68,74 @@ export class WorkoutService {
     );
   }
 
-  // --- MÉTODOS LOCALES (SE MANTIENEN IGUAL) ---
+  // --- MÉTODOS LOCALES ---
 
   private saveToStorage() {
-    if (this.activeWorkout) localStorage.setItem('active_workout', JSON.stringify(this.activeWorkout));
-    else localStorage.removeItem('active_workout');
+    if (isPlatformBrowser(this.platformId)) {
+      if (this.activeWorkout) localStorage.setItem('active_workout', JSON.stringify(this.activeWorkout));
+      else localStorage.removeItem('active_workout');
+    }
   }
 
   private loadFromStorage() {
-    if (typeof localStorage === 'undefined') return; // Protección SSR
-    const saved = localStorage.getItem('active_workout');
-    if (saved) {
-      this.activeWorkout = JSON.parse(saved);
-      if (this.activeWorkout) {
-        this.activeWorkout.startTime = new Date(this.activeWorkout.startTime);
-        this.startWorkoutTimer(); 
+    if (isPlatformBrowser(this.platformId)) {
+      const saved = localStorage.getItem('active_workout');
+      if (saved) {
+        this.activeWorkout = JSON.parse(saved);
+        if (this.activeWorkout) {
+          this.activeWorkout.startTime = new Date(this.activeWorkout.startTime);
+          this.startWorkoutTimer(); 
+        }
       }
     }
   }
 
-  // --- GESTIÓN DE HISTORIAL (MODIFICADO) ---
-
-  // Método auxiliar para obtener un workout específico (ahora debe ser asíncrono o buscar en el snapshot actual si nos suscribimos, 
-  // pero para compatibilidad rápida, dejaremos que los componentes usen history$ | async)
-  // NOTA: Si algún componente usa getWorkoutById de forma síncrona, fallará. 
-  // Lo mejor es que los componentes se suscriban a history$.
+  // --- GESTIÓN DE HISTORIAL (GUARDAR EN FIREBASE) ---
   
   async saveToHistory(workout: ActiveWorkout) {
     const currentUser = this.auth.currentUser;
     
-    // Si NO hay usuario, guardamos en LocalStorage como antes (Modo Invitado)
     if (!currentUser) {
-        this.saveToLocalHistory(workout);
+        console.warn('Usuario no identificado, no se puede guardar en la nube.');
+        alert('Debes iniciar sesión para guardar tu progreso.');
         return;
     }
 
-    // Si HAY usuario, guardamos en Firebase
     try {
         const col = collection(this.firestore, `users/${currentUser.uid}/workouts`);
-        await addDoc(col, {
-            ...workout,
-            // Convertir fechas a strings o Timestamps
-            startTime: new Date(workout.startTime),
+        
+        // Limpiamos el objeto antes de enviarlo a Firebase
+        // Firebase no acepta objetos personalizados complejos o indefinidos a veces
+        const workoutData = {
+            name: workout.name || 'Entrenamiento',
+            startTime: new Date(workout.startTime), // Aseguramos fecha
             endTime: new Date(),
-            userId: currentUser.uid
-        });
-        console.log('Guardado en Firebase');
-    } catch (e) {
-        console.error('Error guardando en nube:', e);
-    }
-  }
+            durationSeconds: workout.durationSeconds,
+            volume: workout.volume || 0,
+            userId: currentUser.uid,
+            // Mapeamos los ejercicios para guardar solo datos puros (sin funciones ni clases)
+            exercises: workout.exercises.map(ex => ({
+                exercise: { ...ex.exercise }, // Copia del ejercicio
+                sets: ex.sets.map(s => ({ ...s })), // Copia de los sets
+                notes: ex.notes || ''
+            }))
+        };
 
-  // Fallback para guardar local si no hay internet/usuario
-  private saveToLocalHistory(workout: ActiveWorkout) {
-     const saved = localStorage.getItem('workout_history');
-     let history = saved ? JSON.parse(saved) : [];
-     workout.id = Date.now().toString();
-     history = [workout, ...history];
-     localStorage.setItem('workout_history', JSON.stringify(history));
-     // Nota: Esto no actualizará history$ automáticamente si no recargas, 
-     // pero es un mal menor comparado con romper la app.
+        await addDoc(col, workoutData);
+        console.log('✅ Entrenamiento guardado en Firebase');
+        
+        // IMPORTANTE: Detenemos el workout local SOLO después de guardar exitosamente
+        this.stopWorkout(); 
+
+    } catch (e) {
+        console.error('❌ Error guardando en nube:', e);
+        alert('Hubo un error al guardar el entrenamiento. Revisa tu conexión.');
+    }
   }
 
   async deleteFromHistory(id: string) {
     const currentUser = this.auth.currentUser;
-    if (!currentUser) return; // O implementar borrado local
+    if (!currentUser) return;
     
     try {
         const docRef = doc(this.firestore, `users/${currentUser.uid}/workouts/${id}`);
@@ -140,7 +145,7 @@ export class WorkoutService {
     }
   }
 
-  // --- EL RESTO DE MÉTODOS SIGUEN IGUAL (LÓGICA DE ENTRENAMIENTO) ---
+  // --- LÓGICA DE ENTRENAMIENTO (TIMERS, ETC) ---
 
   startNewWorkout(routine?: Routine) {
     this.stopRestTimer();
@@ -177,6 +182,7 @@ export class WorkoutService {
     this.stopRestTimer();
   }
 
+  // ... (addExercise, removeExercise, replaceExercise siguen igual) ...
   addExercise(exercise: Exercise) {
     if (!this.activeWorkout) return;
     const newGroup: WorkoutExercise = {
@@ -200,20 +206,26 @@ export class WorkoutService {
     this.saveToStorage();
   }
 
+  // ... (Lógica de Timers con chequeo de audio) ...
+
   updateRestTime(newSeconds: number) {
     this.defaultRestSeconds = newSeconds;
     if (this.isResting) this.restDurationRemaining = newSeconds;
   }
 
-  startRestTimer(seconds?: number) { // Modifiqué levemente para aceptar parámetro opcional si lo usas
+  startRestTimer(seconds?: number) {
     this.stopRestTimer();
     this.isResting = true;
     this.restDurationRemaining = seconds || this.defaultRestSeconds;
-    this.restTimerInterval = setInterval(() => {
-      this.restDurationRemaining--;
-      this.timerTick$.next();
-      if (this.restDurationRemaining <= 0) this.finishRestTimer();
-    }, 1000);
+    
+    // Timer en intervalo
+    if (isPlatformBrowser(this.platformId)) {
+        this.restTimerInterval = setInterval(() => {
+        this.restDurationRemaining--;
+        this.timerTick$.next();
+        if (this.restDurationRemaining <= 0) this.finishRestTimer();
+        }, 1000);
+    }
   }
 
   stopRestTimer() {
@@ -225,7 +237,10 @@ export class WorkoutService {
 
   finishRestTimer() {
     this.stopRestTimer();
-    this.timerSound.play().catch(e => console.log('Sonido pendiente'));
+    // CORRECCIÓN AUDIO: Verificamos si existe antes de reproducir
+    if (this.timerSound) {
+        this.timerSound.play().catch(e => console.log('Sonido bloqueado por navegador', e));
+    }
   }
 
   addTimeToShow(seconds: number) {
@@ -237,13 +252,15 @@ export class WorkoutService {
 
   private startWorkoutTimer() {
     this.stopWorkoutTimer();
-    this.workoutTimerInterval = setInterval(() => {
-      if (this.activeWorkout) {
-        this.activeWorkout.durationSeconds++;
-        this.timerTick$.next();
-        if (this.activeWorkout.durationSeconds % 5 === 0) this.saveToStorage();
-      }
-    }, 1000);
+    if (isPlatformBrowser(this.platformId)) {
+        this.workoutTimerInterval = setInterval(() => {
+        if (this.activeWorkout) {
+            this.activeWorkout.durationSeconds++;
+            this.timerTick$.next();
+            if (this.activeWorkout.durationSeconds % 5 === 0) this.saveToStorage();
+        }
+        }, 1000);
+    }
   }
 
   private stopWorkoutTimer() {
@@ -259,11 +276,9 @@ export class WorkoutService {
     return hrs > 0 ? `${hrs}:${pad(mins)}:${pad(secs)}` : `${pad(mins)}:${pad(secs)}`;
   }
 
-  // IMPORTANTE: Este método síncrono ya no es compatible con Firebase directo
-  // Lo dejo devolviendo undefined para evitar errores de compilación, 
-  // pero debes actualizar donde lo uses para buscar en la lista history$
   getWorkoutById(id: string): ActiveWorkout | undefined {
-    console.warn('getWorkoutById síncrono está obsoleto con Firebase. Usa history$');
+    // Método legacy para componentes que no usan el observable history$
+    // Retorna undefined porque en Firebase es asíncrono
     return undefined; 
   }
 }

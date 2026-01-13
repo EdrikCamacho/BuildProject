@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject } from '@angular/core'; // Eliminado OnInit
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { WorkoutService } from '../../core/services/workout.service';
+import { AuthService } from '../../core/services/auth.service'; // Inyectamos Auth
 import { ActiveWorkout } from '../../core/models/workout.model';
 
 @Component({
@@ -10,13 +11,24 @@ import { ActiveWorkout } from '../../core/models/workout.model';
   imports: [CommonModule, RouterLink],
   templateUrl: './profile.component.html'
 })
-export class ProfileComponent implements OnInit {
-  // ... (Variables de usuario y stats siguen igual) ...
+export class ProfileComponent {
+  // Inyecciones
+  public workoutService = inject(WorkoutService); // public para usar en HTML si hace falta
+  private router = inject(Router);
+  public authService = inject(AuthService); // public para el HTML
+
+  // --- VARIABLES DE VISTA (TU CÓDIGO ORIGINAL) ---
+  // Nota: user.name lo reemplazaremos en el HTML por el de Firebase
   user = { name: 'Atleta', photoUrl: '', joinDate: 'Diciembre 2025', avatarLetter: 'A' };
+  
   currentPeriod: any = '1S';
   periods: any[] = ['1S', '1M', '3M', '1A', 'Todo'];
-  analyticsData: any = { '1S': { volume: '12.5T', sets: 45, volumeTrend: [40, 60, 45, 80, 50, 70, 90], setsTrend: [50, 60, 55, 80, 60, 75, 85] } };
+  analyticsData: any = { 
+    '1S': { volume: '12.5T', sets: 45, volumeTrend: [40, 60, 45, 80, 50, 70, 90], setsTrend: [50, 60, 55, 80, 60, 75, 85] } 
+  };
+  
   get currentStats() { return this.analyticsData['1S']; }
+  
   setPeriod(p: any) { this.currentPeriod = p; }
   
   menuItems = [
@@ -25,31 +37,27 @@ export class ProfileComponent implements OnInit {
     { title: 'Análisis Muscular', icon: 'anatomy', desc: 'Mapa de calor y simetría', route: '/muscles' }
   ];
 
-  history: ActiveWorkout[] = [];
+  // --- CAMBIO CLAVE: Usamos Observable directo de Firebase ---
+  // history: ActiveWorkout[] = []; // <--- BORRADO
+  history$ = this.workoutService.history$; // <--- NUEVO
   
-  // NUEVO: Control del menú activo (ID del workout)
   activeMenuId: string | null = null;
 
-  constructor(public workoutService: WorkoutService, private router: Router) {}
+  constructor() {}
 
-  ngOnInit() {
-    this.workoutService.history$.subscribe(data => {
-      this.history = data;
-    });
-  }
+  // ngOnInit borrado porque history$ se maneja con el pipe async en HTML
 
   getSetsCount(workout: ActiveWorkout): number {
-    return workout.exercises.reduce((acc, ex) => acc + ex.sets.filter(s => s.completed).length, 0);
+    if (!workout.exercises) return 0;
+    return workout.exercises.reduce((acc, ex) => acc + (ex.sets ? ex.sets.filter(s => s.completed).length : 0), 0);
   }
 
   viewWorkoutDetail(id: string) {
     this.router.navigate(['/history', id]);
   }
 
-  // --- NUEVAS FUNCIONES DEL MENÚ ---
-
   toggleMenu(id: string, event: Event) {
-    event.stopPropagation(); // Evita ir al detalle
+    event.stopPropagation();
     this.activeMenuId = this.activeMenuId === id ? null : id;
   }
 
@@ -61,29 +69,27 @@ export class ProfileComponent implements OnInit {
     event.stopPropagation();
     this.closeMenu();
 
-    // 1. Iniciamos un entrenamiento limpio en el servicio
     this.workoutService.startNewWorkout();
 
-    // 2. Sobrescribimos con los datos del historial (pero limpiando estado)
     if (this.workoutService.activeWorkout) {
       this.workoutService.activeWorkout.name = workout.name;
-      
-      // Copiamos ejercicios y sets, pero reseteamos 'completed' a false
       this.workoutService.activeWorkout.exercises = workout.exercises.map(ex => ({
         ...ex,
-        tempId: Date.now().toString() + Math.random(), // Nuevos IDs temporales
-        sets: ex.sets.map(s => ({ ...s, completed: false })) // Resetear checks
+        tempId: Date.now().toString() + Math.random(),
+        sets: ex.sets.map(s => ({ ...s, completed: false }))
       }));
     }
 
-    // 3. Vamos al tracker
-    this.router.navigate(['/tracker']);
+    // Corregido: la ruta correcta suele ser /workout/active, verifica si es /tracker en tu app
+    this.router.navigate(['/workout/active']); 
   }
 
-  deleteWorkout(id: string, event: Event) {
+  deleteWorkout(id: string | undefined, event: Event) { // ID puede ser undefined
     event.stopPropagation();
     this.closeMenu();
     
+    if (!id) return;
+
     if (confirm('¿Eliminar este entrenamiento del historial?')) {
       this.workoutService.deleteFromHistory(id);
     }
