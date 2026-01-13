@@ -1,12 +1,12 @@
-import { Injectable, inject, PLATFORM_ID, Inject } from '@angular/core';
+import { Injectable, inject, PLATFORM_ID, Inject, NgZone } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { Subject, Observable, of, from } from 'rxjs'; // Añadido 'from'
+import { Subject, Observable, of, from } from 'rxjs';
 import { map, switchMap, tap, shareReplay, catchError } from 'rxjs/operators';
 import { ActiveWorkout, WorkoutExercise } from '../models/workout.model';
 import { Exercise } from '../models/exercise.model';
 import { Routine } from '../models/routine.model';
 
-// Firebase - Importamos getDocs para una carga más directa
+// Firebase
 import { Firestore, collection, addDoc, query, deleteDoc, doc, getDocs } from '@angular/fire/firestore';
 import { Auth, authState } from '@angular/fire/auth';
 
@@ -16,6 +16,7 @@ import { Auth, authState } from '@angular/fire/auth';
 export class WorkoutService {
   private firestore = inject(Firestore);
   private auth = inject(Auth);
+  private ngZone = inject(NgZone);
   
   private user$ = authState(this.auth);
 
@@ -40,24 +41,17 @@ export class WorkoutService {
 
     this.loadFromStorage();
     
-    // CORRECCIÓN DEFINITIVA USANDO GETDOCS (Más estable)
     this.history$ = this.user$.pipe(
       switchMap(currentUser => {
         if (!currentUser || !isPlatformBrowser(this.platformId)) {
           return of([]);
         } 
 
-        console.log('Browser: Cargando historial para:', currentUser.uid);
-        
-        // Creamos la referencia a la colección
         const colRef = collection(this.firestore, `users/${currentUser.uid}/workouts`);
         
-        // Usamos 'from' para convertir la promesa de getDocs en un Observable
-        // Esto evita el error de tipos de 'collectionData'
         return from(getDocs(colRef)).pipe(
           map(querySnapshot => {
             const workouts: ActiveWorkout[] = [];
-            
             querySnapshot.forEach((doc) => {
               const data = doc.data() as any;
               workouts.push({
@@ -67,26 +61,61 @@ export class WorkoutService {
                 endTime: data.endTime?.seconds ? new Date(data.endTime.seconds * 1000) : (data.endTime ? new Date(data.endTime) : null)
               } as ActiveWorkout);
             });
-
-            // Ordenamos manualmente por fecha descendente
             return workouts.sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
           }),
-          tap(workouts => console.log('Browser: Historial cargado con éxito. Total:', workouts.length)),
-          catchError(err => {
-            console.error('Error al obtener documentos de Firestore:', err);
-            return of([]);
-          })
+          catchError(() => of([])),
+          shareReplay(1)
         );
-      }),
-      shareReplay(1)
+      })
     );
   }
 
-  // --- MÉTODOS DE PERSISTENCIA LOCAL ---
+  // --- REPETIR RUTINA ---
+  startFromPrevious(previousWorkout: ActiveWorkout) {
+    this.stopRestTimer();
+    this.stopWorkoutTimer();
+
+    const exercises: WorkoutExercise[] = previousWorkout.exercises.map(ex => ({
+      tempId: Date.now().toString() + Math.random(),
+      exercise: { ...ex.exercise },
+      sets: ex.sets.map((s, i) => ({
+        id: i + 1,
+        type: s.type,
+        weight: s.weight,
+        reps: s.reps,
+        completed: false 
+      })),
+      notes: ex.notes || ''
+    }));
+
+    this.activeWorkout = {
+      name: previousWorkout.name,
+      startTime: new Date(),
+      durationSeconds: 0,
+      exercises,
+      volume: 0
+    };
+
+    this.saveToStorage();
+    this.startWorkoutTimer();
+  }
+
+  // --- GESTIÓN DE TIEMPO DE DESCANSO ---
+  updateRestTime(newSeconds: number) {
+    this.defaultRestSeconds = newSeconds;
+    if (this.isResting) {
+      this.restDurationRemaining = newSeconds;
+    }
+  }
+
+  // --- MÉTODOS DE PERSISTENCIA ---
   private saveToStorage() {
     if (isPlatformBrowser(this.platformId)) {
-      if (this.activeWorkout) localStorage.setItem('active_workout', JSON.stringify(this.activeWorkout));
-      else localStorage.removeItem('active_workout');
+      if (this.activeWorkout) {
+        localStorage.setItem('active_workout', JSON.stringify(this.activeWorkout));
+      } else {
+        localStorage.removeItem('active_workout');
+      }
     }
   }
 
@@ -107,11 +136,76 @@ export class WorkoutService {
     }
   }
 
-  // --- FIREBASE OPS ---
+  // --- LÓGICA DE CRONÓMETROS (ZONA FUERA DE ANGULAR PARA ESTABILIDAD) ---
+  private startWorkoutTimer() {
+    this.stopWorkoutTimer();
+    if (isPlatformBrowser(this.platformId)) {
+      this.ngZone.runOutsideAngular(() => {
+        this.workoutTimerInterval = setInterval(() => {
+          if (this.activeWorkout) {
+            this.activeWorkout.durationSeconds++;
+            this.ngZone.run(() => {
+              this.timerTick$.next();
+              if (this.activeWorkout!.durationSeconds % 5 === 0) {
+                this.saveToStorage();
+              }
+            });
+          }
+        }, 1000);
+      });
+    }
+  }
+
+  private stopWorkoutTimer() {
+    if (this.workoutTimerInterval) {
+      clearInterval(this.workoutTimerInterval);
+    }
+  }
+
+  startRestTimer(seconds?: number) {
+    this.stopRestTimer();
+    this.isResting = true;
+    this.restDurationRemaining = seconds || this.defaultRestSeconds;
+    
+    if (isPlatformBrowser(this.platformId)) {
+      this.ngZone.runOutsideAngular(() => {
+        this.restTimerInterval = setInterval(() => {
+          this.restDurationRemaining--;
+          this.ngZone.run(() => {
+            this.timerTick$.next();
+            if (this.restDurationRemaining <= 0) {
+              this.finishRestTimer();
+            }
+          });
+        }, 1000);
+      });
+    }
+  }
+
+  stopRestTimer() {
+    if (this.restTimerInterval) clearInterval(this.restTimerInterval);
+    this.isResting = false;
+    this.restDurationRemaining = 0;
+  }
+
+  finishRestTimer() {
+    this.stopRestTimer();
+    if (this.timerSound) {
+      this.timerSound.play().catch(() => {});
+    }
+  }
+
+  addTimeToShow(seconds: number) {
+    if (this.isResting) {
+      this.restDurationRemaining += seconds;
+      this.timerTick$.next();
+    }
+  }
+
+  // --- FIREBASE Y OPERACIONES ---
   async saveToHistory(workout: ActiveWorkout) {
     const currentUser = this.auth.currentUser;
     if (!currentUser) return;
-
     try {
         const col = collection(this.firestore, `users/${currentUser.uid}/workouts`);
         const workoutData = {
@@ -128,16 +222,9 @@ export class WorkoutService {
             }))
         };
         await addDoc(col, workoutData);
-        console.log('✅ Guardado en la nube');
         this.stopWorkout(); 
         this.timerTick$.next();
-        
-        // OPCIONAL: Para que el historial se refresque tras guardar, 
-        // podrías disparar un evento o recargar la página, 
-        // aunque getDocs solo carga una vez al iniciar.
-    } catch (e) {
-        console.error('Error guardando:', e);
-    }
+    } catch (e) { console.error(e); }
   }
 
   async deleteFromHistory(id: string) {
@@ -145,11 +232,9 @@ export class WorkoutService {
     if (!currentUser) return;
     try {
         await deleteDoc(doc(this.firestore, `users/${currentUser.uid}/workouts/${id}`));
-        console.log('✅ Eliminado de la nube');
-    } catch (e) { console.error('Error eliminando:', e); }
+    } catch (e) { console.error(e); }
   }
 
-  // --- LÓGICA DE TRACKER ---
   startNewWorkout(routine?: Routine) {
     this.stopRestTimer();
     let exercises: WorkoutExercise[] = [];
@@ -180,57 +265,18 @@ export class WorkoutService {
   }
 
   removeExercise(index: number) {
-    if (this.activeWorkout) { this.activeWorkout.exercises.splice(index, 1); this.saveToStorage(); }
+    if (this.activeWorkout) { 
+      this.activeWorkout.exercises.splice(index, 1); 
+      this.saveToStorage(); 
+    }
   }
 
   replaceExercise(index: number, newExercise: Exercise) {
-    if (this.activeWorkout?.exercises[index]) { this.activeWorkout.exercises[index].exercise = newExercise; this.saveToStorage(); }
-  }
-
-  // --- TIMERS ---
-  updateRestTime(newSeconds: number) {
-    this.defaultRestSeconds = newSeconds;
-    if (this.isResting) this.restDurationRemaining = newSeconds;
-  }
-
-  startRestTimer(seconds?: number) {
-    this.stopRestTimer();
-    this.isResting = true;
-    this.restDurationRemaining = seconds || this.defaultRestSeconds;
-    if (isPlatformBrowser(this.platformId)) {
-        this.restTimerInterval = setInterval(() => {
-          this.restDurationRemaining--;
-          this.timerTick$.next();
-          if (this.restDurationRemaining <= 0) this.finishRestTimer();
-        }, 1000);
+    if (this.activeWorkout?.exercises[index]) { 
+      this.activeWorkout.exercises[index].exercise = newExercise; 
+      this.saveToStorage(); 
     }
   }
-
-  stopRestTimer() {
-    if (this.restTimerInterval) clearInterval(this.restTimerInterval);
-    this.isResting = false;
-    this.timerTick$.next(); 
-  }
-
-  finishRestTimer() {
-    this.stopRestTimer();
-    if (this.timerSound) this.timerSound.play().catch(() => {});
-  }
-
-  addTimeToShow(seconds: number) {
-    if (this.isResting) { this.restDurationRemaining += seconds; this.timerTick$.next(); }
-  }
-
-  private startWorkoutTimer() {
-    this.stopWorkoutTimer();
-    if (isPlatformBrowser(this.platformId)) {
-        this.workoutTimerInterval = setInterval(() => {
-          if (this.activeWorkout) { this.activeWorkout.durationSeconds++; this.timerTick$.next(); if (this.activeWorkout.durationSeconds % 5 === 0) this.saveToStorage(); }
-        }, 1000);
-    }
-  }
-
-  private stopWorkoutTimer() { if (this.workoutTimerInterval) clearInterval(this.workoutTimerInterval); }
 
   formatTime(seconds: number): string {
     const hrs = Math.floor(seconds / 3600);

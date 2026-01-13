@@ -70,16 +70,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
   repeatWorkout(workout: ActiveWorkout, event: Event) {
     event.stopPropagation();
     this.closeMenu();
-    this.workoutService.startNewWorkout();
-    if (this.workoutService.activeWorkout) {
-      this.workoutService.activeWorkout.name = workout.name;
-      this.workoutService.activeWorkout.exercises = workout.exercises.map(ex => ({
-        ...ex,
-        tempId: Date.now().toString() + Math.random(),
-        sets: ex.sets.map(s => ({ ...s, completed: false }))
-      }));
-    }
-    this.router.navigate(['/workout/active']);
+    
+    this.workoutService.startFromPrevious(workout);
+    
+    // CORRECCIÓN: Usar la ruta 'tracker' que definiste en app.routes.ts
+    this.router.navigate(['/tracker']); 
   }
 
   deleteWorkout(id: string | undefined, event: Event) {
