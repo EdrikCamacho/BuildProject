@@ -240,11 +240,11 @@ export class WorkoutService {
     let exercises: WorkoutExercise[] = [];
     if (routine) {
       exercises = routine.exercises.map(rex => ({
-        tempId: crypto.randomUUID(), // o el generador que uses
+        tempId: crypto.randomUUID(),
         exercise: rex.exercise,
         sets: rex.sets.map((s, index) => ({
           id: index + 1,
-          type: s.type as any, // <--- Añade "as any" o el tipo específico para validar
+          type: s.type as any, // Añade "as any" aquí para evitar el error de tipo string
           weight: s.weight || 0,
           reps: s.reps || 0,
           completed: false

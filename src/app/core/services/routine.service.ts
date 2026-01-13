@@ -124,23 +124,79 @@ export class RoutineService {
     const defaultRoutines = [
       {
         name: 'Día de Upper (Torso)',
-        description: 'Entrenamiento completo de pecho, espalda y hombros.',
+        description: 'Rutina de hipertrofia para tren superior: Pecho, Espalda y Hombros.',
         userId: userId,
-        exercises: [],
-        createdAt: new Date()
+        createdAt: new Date(),
+        exercises: [
+          {
+            exercise: { id: '1', name: 'Press de Banca', muscleGroup: 'Pecho', category: 'Fuerza' }, // Ajustar según tu ExerciseService
+            sets: [
+              { type: 'normal', reps: 10, weight: 0 },
+              { type: 'normal', reps: 10, weight: 0 },
+              { type: 'normal', reps: 10, weight: 0 }
+            ],
+            notes: 'Controlar el tempo 2-0-2.'
+          },
+          {
+            exercise: { id: '3', name: 'Remo con Barra', muscleGroup: 'Espalda', category: 'Fuerza' },
+            sets: [
+              { type: 'normal', reps: 12, weight: 0 },
+              { type: 'normal', reps: 12, weight: 0 },
+              { type: 'normal', reps: 12, weight: 0 }
+            ],
+            notes: 'Mantener la espalda recta.'
+          },
+          {
+            exercise: { id: '4', name: 'Press Militar', muscleGroup: 'Hombro', category: 'Fuerza' },
+            sets: [
+              { type: 'normal', reps: 10, weight: 0 },
+              { type: 'normal', reps: 10, weight: 0 }
+            ]
+          }
+        ]
       },
       {
         name: 'Día de Lower (Pierna)',
-        description: 'Entrenamiento completo de cuádriceps, glúteos y femoral.',
+        description: 'Rutina de hipertrofia para tren inferior: Cuádriceps, Isquios y Glúteos.',
         userId: userId,
-        exercises: [],
-        createdAt: new Date()
+        createdAt: new Date(),
+        exercises: [
+          {
+            exercise: { id: '2', name: 'Sentadilla Libre', muscleGroup: 'Pierna', category: 'Fuerza' },
+            sets: [
+              { type: 'normal', reps: 8, weight: 0 },
+              { type: 'normal', reps: 8, weight: 0 },
+              { type: 'normal', reps: 8, weight: 0 }
+            ],
+            notes: 'Profundidad adecuada.'
+          },
+          {
+            exercise: { id: '5', name: 'Peso Muerto Rumano', muscleGroup: 'Pierna', category: 'Fuerza' },
+            sets: [
+              { type: 'normal', reps: 12, weight: 0 },
+              { type: 'normal', reps: 12, weight: 0 },
+              { type: 'normal', reps: 12, weight: 0 }
+            ],
+            notes: 'Sentir el estiramiento en isquios.'
+          },
+          {
+            exercise: { id: '6', name: 'Prensa de Piernas', muscleGroup: 'Pierna', category: 'Fuerza' },
+            sets: [
+              { type: 'normal', reps: 15, weight: 0 },
+              { type: 'normal', reps: 15, weight: 0 }
+            ]
+          }
+        ]
       }
     ];
 
-    // Guardamos cada rutina en la colección de Firestore
+    // Guardamos cada rutina en la colección de Firestore vinculada al usuario
     for (const routine of defaultRoutines) {
-      await addDoc(this.routinesCollection, routine);
+      try {
+        await addDoc(this.routinesCollection, routine);
+      } catch (error) {
+        console.error("Error al crear rutina por defecto:", error);
+      }
     }
   }
 }

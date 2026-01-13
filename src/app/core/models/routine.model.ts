@@ -1,16 +1,9 @@
-import { Exercise } from './exercise.model';
-
-export interface RoutineSet {
-  type: 'warmup' | 'normal' | 'failure' | 'drop';
-  reps?: number;
-  weight?: number; 
-}
+import { Exercise } from "./exercise.model";
 
 export interface RoutineExercise {
   exercise: Exercise;
-  // Definimos los sets para que coincidan con lo que pide el creador de rutinas
   sets: { 
-    type: string; // O puedes usar: "normal" | "warmup" | "failure" | "drop"
+    type: "normal" | "warmup" | "failure" | "drop"; // Tipos exactos para evitar errores
     reps: number; 
     weight: number; 
   }[];
@@ -18,7 +11,7 @@ export interface RoutineExercise {
 }
 
 export interface Routine {
-  id?: string; // El id es opcional porque Firebase lo genera después
+  id?: string;
   name: string;
   description?: string;
   userId: string;
