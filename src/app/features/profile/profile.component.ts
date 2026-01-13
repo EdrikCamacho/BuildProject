@@ -1,9 +1,10 @@
-import { Component, inject } from '@angular/core'; // Eliminado OnInit
+import { Component, inject, ChangeDetectorRef, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { WorkoutService } from '../../core/services/workout.service';
-import { AuthService } from '../../core/services/auth.service'; // Inyectamos Auth
+import { AuthService } from '../../core/services/auth.service';
 import { ActiveWorkout } from '../../core/models/workout.model';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-profile',
@@ -11,16 +12,13 @@ import { ActiveWorkout } from '../../core/models/workout.model';
   imports: [CommonModule, RouterLink],
   templateUrl: './profile.component.html'
 })
-export class ProfileComponent {
-  // Inyecciones
-  public workoutService = inject(WorkoutService); // public para usar en HTML si hace falta
+export class ProfileComponent implements OnInit, OnDestroy {
+  public workoutService = inject(WorkoutService);
   private router = inject(Router);
-  public authService = inject(AuthService); // public para el HTML
+  public authService = inject(AuthService);
+  private cdr = inject(ChangeDetectorRef);
 
-  // --- VARIABLES DE VISTA (TU CÓDIGO ORIGINAL) ---
-  // Nota: user.name lo reemplazaremos en el HTML por el de Firebase
   user = { name: 'Atleta', photoUrl: '', joinDate: 'Diciembre 2025', avatarLetter: 'A' };
-  
   currentPeriod: any = '1S';
   periods: any[] = ['1S', '1M', '3M', '1A', 'Todo'];
   analyticsData: any = { 
@@ -28,24 +26,28 @@ export class ProfileComponent {
   };
   
   get currentStats() { return this.analyticsData['1S']; }
-  
   setPeriod(p: any) { this.currentPeriod = p; }
-  
+
   menuItems = [
     { title: 'Medidas Corporales', icon: '📏', desc: 'Registra tu peso y perímetros', route: '/measurements' },
     { title: 'Biblioteca de Ejercicios', icon: '📚', desc: 'Tutoriales e historial por ejercicio', route: '/exercises' },
     { title: 'Análisis Muscular', icon: 'anatomy', desc: 'Mapa de calor y simetría', route: '/muscles' }
   ];
 
-  // --- CAMBIO CLAVE: Usamos Observable directo de Firebase ---
-  // history: ActiveWorkout[] = []; // <--- BORRADO
-  history$ = this.workoutService.history$; // <--- NUEVO
-  
+  history$ = this.workoutService.history$;
   activeMenuId: string | null = null;
+  private historySub?: Subscription;
 
-  constructor() {}
+  ngOnInit() {
+    // Forzamos la detección de cambios cuando el historial emite datos
+    this.historySub = this.history$.subscribe(() => {
+      this.cdr.detectChanges();
+    });
+  }
 
-  // ngOnInit borrado porque history$ se maneja con el pipe async en HTML
+  ngOnDestroy() {
+    this.historySub?.unsubscribe();
+  }
 
   getSetsCount(workout: ActiveWorkout): number {
     if (!workout.exercises) return 0;
@@ -68,9 +70,7 @@ export class ProfileComponent {
   repeatWorkout(workout: ActiveWorkout, event: Event) {
     event.stopPropagation();
     this.closeMenu();
-
     this.workoutService.startNewWorkout();
-
     if (this.workoutService.activeWorkout) {
       this.workoutService.activeWorkout.name = workout.name;
       this.workoutService.activeWorkout.exercises = workout.exercises.map(ex => ({
@@ -79,17 +79,13 @@ export class ProfileComponent {
         sets: ex.sets.map(s => ({ ...s, completed: false }))
       }));
     }
-
-    // Corregido: la ruta correcta suele ser /workout/active, verifica si es /tracker en tu app
-    this.router.navigate(['/workout/active']); 
+    this.router.navigate(['/workout/active']);
   }
 
-  deleteWorkout(id: string | undefined, event: Event) { // ID puede ser undefined
+  deleteWorkout(id: string | undefined, event: Event) {
     event.stopPropagation();
     this.closeMenu();
-    
     if (!id) return;
-
     if (confirm('¿Eliminar este entrenamiento del historial?')) {
       this.workoutService.deleteFromHistory(id);
     }
