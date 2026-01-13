@@ -1,5 +1,13 @@
 import { Injectable, inject } from '@angular/core';
-import { Auth, user, updateProfile, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateEmail } from '@angular/fire/auth';
+import { 
+  Auth, 
+  user, 
+  updateProfile, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  updateEmail,
+  updatePassword // Se añadió esta importación
+} from '@angular/fire/auth';
 import { Observable } from 'rxjs';
 
 @Injectable({
@@ -17,12 +25,10 @@ export class AuthService {
     return signInWithEmailAndPassword(this.auth, email, pass);
   }
 
-  // Registro: Espera 2 argumentos (email y password)
   async register(email: string, pass: string) {
     return createUserWithEmailAndPassword(this.auth, email, pass);
   }
 
-  // Perfil: Ahora solo pide 1 argumento (displayName)
   async updateUserData(displayName: string): Promise<void> {
     const currentUser = this.auth.currentUser;
     if (!currentUser) throw new Error("No hay usuario");
@@ -38,6 +44,18 @@ export class AuthService {
       await updateEmail(currentUser, newEmail);
     } catch (error) {
       console.error("Error al actualizar email:", error);
+      throw error;
+    }
+  }
+
+  // Nuevo método para actualizar la contraseña
+  async updatePassword(newPass: string): Promise<void> {
+    const currentUser = this.auth.currentUser;
+    if (!currentUser) throw new Error("No hay usuario autenticado");
+    try {
+      await updatePassword(currentUser, newPass);
+    } catch (error) {
+      console.error("Error al actualizar contraseña:", error);
       throw error;
     }
   }
