@@ -8,14 +8,20 @@ export interface RoutineSet {
 
 export interface RoutineExercise {
   exercise: Exercise;
-  sets: RoutineSet[];
+  // Definimos los sets para que coincidan con lo que pide el creador de rutinas
+  sets: { 
+    type: string; // O puedes usar: "normal" | "warmup" | "failure" | "drop"
+    reps: number; 
+    weight: number; 
+  }[];
   notes?: string;
 }
 
 export interface Routine {
-  id: string;
+  id?: string; // El id es opcional porque Firebase lo genera después
   name: string;
+  description?: string;
+  userId: string;
   exercises: RoutineExercise[];
-  // AGREGAMOS ESTA LÍNEA:
-  createdAt?: Date; 
+  createdAt: any;
 }

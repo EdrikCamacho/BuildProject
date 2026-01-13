@@ -1,15 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { 
-  Auth, 
-  user, 
-  updateProfile, 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
-  updateEmail,
-  updatePassword,
-  deleteUser 
+  Auth, user, updateProfile, signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, updateEmail, updatePassword, deleteUser 
 } from '@angular/fire/auth';
-import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -26,50 +19,33 @@ export class AuthService {
     return signInWithEmailAndPassword(this.auth, email, pass);
   }
 
-  async register(email: string, pass: string) {
-    return createUserWithEmailAndPassword(this.auth, email, pass);
+  // Registro simple: Solo crea el usuario y actualiza el nombre
+  async register(email: string, pass: string, name?: string) {
+    const userCredential = await createUserWithEmailAndPassword(this.auth, email, pass);
+    if (name) {
+      await updateProfile(userCredential.user, { displayName: name });
+    }
+    return userCredential;
   }
 
   async updateUserData(displayName: string): Promise<void> {
-    const currentUser = this.auth.currentUser;
-    if (!currentUser) throw new Error("No hay usuario");
-    await updateProfile(currentUser, { 
-      displayName: displayName
-    });
+    if (!this.currentUser) throw new Error("No hay usuario");
+    await updateProfile(this.currentUser, { displayName });
   }
 
   async changeEmail(newEmail: string): Promise<void> {
-    const currentUser = this.auth.currentUser;
-    if (!currentUser) throw new Error("No hay usuario autenticado");
-    try {
-      await updateEmail(currentUser, newEmail);
-    } catch (error) {
-      console.error("Error al actualizar email:", error);
-      throw error;
-    }
+    if (!this.currentUser) throw new Error("No hay usuario autenticado");
+    await updateEmail(this.currentUser, newEmail);
   }
 
-  // Nuevo método para actualizar la contraseña
   async updatePassword(newPass: string): Promise<void> {
-    const currentUser = this.auth.currentUser;
-    if (!currentUser) throw new Error("No hay usuario autenticado");
-    try {
-      await updatePassword(currentUser, newPass);
-    } catch (error) {
-      console.error("Error al actualizar contraseña:", error);
-      throw error;
-    }
+    if (!this.currentUser) throw new Error("No hay usuario autenticado");
+    await updatePassword(this.currentUser, newPass);
   }
 
   async deleteAccount(): Promise<void> {
-    const currentUser = this.auth.currentUser;
-    if (!currentUser) throw new Error("No hay usuario autenticado");
-    try {
-      await deleteUser(currentUser);
-    } catch (error) {
-      console.error("Error al eliminar cuenta:", error);
-      throw error;
-    }
+    if (!this.currentUser) throw new Error("No hay usuario autenticado");
+    await deleteUser(this.currentUser);
   }
 
   async logout(): Promise<void> {

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { RoutineService } from '../../../core/services/routine.service'; // Importamos el servicio de rutinas
 
 @Component({
   selector: 'app-register',
@@ -12,19 +13,20 @@ import { AuthService } from '../../../core/services/auth.service';
 })
 export class RegisterComponent {
   private authService = inject(AuthService);
+  private routineService = inject(RoutineService); // Inyectamos el servicio
   private router = inject(Router);
 
   registerData = {
     name: '',
     email: '',
     password: '',
-    confirmPassword: '' // Añadido para el HTML
+    confirmPassword: ''
   };
   
   loading = false;
-  submitted = false; // Añadido para las validaciones del HTML
-  showPassword = false; // Añadido para el icono del ojo
-  showConfirmPassword = false; // Añadido para el icono del ojo
+  submitted = false;
+  showPassword = false;
+  showConfirmPassword = false;
 
   togglePassword() {
     this.showPassword = !this.showPassword;
@@ -34,11 +36,10 @@ export class RegisterComponent {
     this.showConfirmPassword = !this.showConfirmPassword;
   }
 
-  // Cambiado de onSubmit a onRegister para coincidir con tu HTML
   async onRegister() {
     this.submitted = true;
 
-    // Validación básica de coincidencia
+    // Validación de coincidencia
     if (this.registerData.password !== this.registerData.confirmPassword) {
       return;
     }
@@ -49,13 +50,19 @@ export class RegisterComponent {
 
     this.loading = true;
     try {
+      // 1. Registro en Firebase Auth
       const credential = await this.authService.register(
         this.registerData.email, 
         this.registerData.password
       );
       
       if (credential.user) {
+        // 2. Actualizamos el nombre en el perfil
         await this.authService.updateUserData(this.registerData.name);
+        
+        // 3. --- NUEVO: Creamos las rutinas por defecto para este UID ---
+        console.log('Creando rutinas iniciales para:', credential.user.uid);
+        await this.routineService.createDefaultRoutines(credential.user.uid);
       }
       
       this.router.navigate(['/dashboard']);

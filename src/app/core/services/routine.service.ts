@@ -1,22 +1,53 @@
-import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
-import { BehaviorSubject } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { 
+  Firestore, 
+  collection, 
+  addDoc, 
+  collectionData, 
+  query, 
+  where, 
+  doc, 
+  deleteDoc, 
+  updateDoc,
+  orderBy
+} from '@angular/fire/firestore';
+import { BehaviorSubject, Observable, of, switchMap, tap } from 'rxjs';
 import { Routine, RoutineExercise } from '../models/routine.model';
 import { Exercise } from '../models/exercise.model';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RoutineService {
-  private routinesSubject = new BehaviorSubject<Routine[]>([]);
-  public routines$ = this.routinesSubject.asObservable();
+  private firestore = inject(Firestore);
+  private authService = inject(AuthService);
+  
+  private routinesCollection = collection(this.firestore, 'routines');
 
-  // Variable para manejar el borrador temporal (Creación/Edición)
+  private routinesSubject = new BehaviorSubject<Routine[]>([]);
+  
+  // Observable que se actualiza solo con las rutinas del usuario actual
+  public routines$ = this.authService.user$.pipe(
+    switchMap(user => {
+      if (user) {
+        // Filtramos por userId para que nadie vea rutinas de otros
+        const q = query(
+          this.routinesCollection, 
+          where('userId', '==', user.uid),
+          orderBy('createdAt', 'desc')
+        );
+        return collectionData(q, { idField: 'id' }) as Observable<Routine[]>;
+      } else {
+        return of([]);
+      }
+    }),
+    tap(routines => this.routinesSubject.next(routines))
+  );
+
   public draftRoutine: Routine | null = null;
 
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
-    this.loadRoutines();
-  }
+  constructor() {}
 
   getRoutines(): Routine[] {
     return this.routinesSubject.value;
@@ -26,112 +57,90 @@ export class RoutineService {
     return this.routinesSubject.value.find(r => r.id === id);
   }
 
-  // --- GESTIÓN DE BORRADOR (DRAFT) ---
+  // --- GESTIÓN DE BORRADOR ---
   
-  // Inicializa un borrador (nuevo o existente para editar)
   initDraft(id?: string) {
     if (id) {
-      // Editar existente
       const existing = this.getRoutineById(id);
       if (existing) {
-        // Clonamos para no modificar el original hasta guardar
         this.draftRoutine = JSON.parse(JSON.stringify(existing));
       }
     } else {
-      // Crear nuevo
       this.draftRoutine = {
-        id: Date.now().toString(),
         name: 'Nueva Rutina',
         exercises: [],
-        createdAt: new Date()
-      };
+        createdAt: new Date(),
+        userId: this.authService.currentUser?.uid
+      } as Routine;
     }
   }
 
-  // Guarda el borrador actual en la lista definitiva
-  saveDraft() {
+  async saveDraft() {
     if (!this.draftRoutine) return;
 
-    const currentRoutines = this.getRoutines();
-    const index = currentRoutines.findIndex(r => r.id === this.draftRoutine!.id);
+    const user = this.authService.currentUser;
+    if (!user) throw new Error('Usuario no identificado');
 
-    let updatedRoutines;
-    if (index >= 0) {
-      // Actualizar existente
-      updatedRoutines = [...currentRoutines];
-      updatedRoutines[index] = this.draftRoutine;
+    this.draftRoutine.userId = user.uid;
+
+    if (this.draftRoutine.id) {
+      const routineDoc = doc(this.firestore, `routines/${this.draftRoutine.id}`);
+      const { id, ...data } = this.draftRoutine;
+      await updateDoc(routineDoc, { ...data });
     } else {
-      // Añadir nuevo
-      updatedRoutines = [...currentRoutines, this.draftRoutine];
+      await addDoc(this.routinesCollection, this.draftRoutine);
     }
 
-    this.routinesSubject.next(updatedRoutines);
-    this.saveToStorage(updatedRoutines);
-    this.draftRoutine = null; // Limpiar borrador
+    this.draftRoutine = null;
   }
 
-  // Añade ejercicios seleccionados al borrador
   addExercisesToDraft(exercises: Exercise[]) {
     if (!this.draftRoutine) this.initDraft();
 
     const newExercises: RoutineExercise[] = exercises.map(ex => ({
       exercise: ex,
-      sets: [{ type: 'normal', reps: 10, weight: 0 }], // Set por defecto
+      sets: [{ type: 'normal', reps: 10, weight: 0 }],
       notes: ''
     }));
 
     this.draftRoutine!.exercises = [...this.draftRoutine!.exercises, ...newExercises];
   }
 
-  // --- MÉTODOS CRUD DIRECTOS ---
+  // --- MÉTODOS CRUD ---
 
-  createRoutine(name: string, exercises: any[]) {
-    const newRoutine: Routine = {
-      id: Date.now().toString(),
-      name,
-      exercises,
-      createdAt: new Date()
-    };
-    
-    const updated = [...this.getRoutines(), newRoutine];
-    this.routinesSubject.next(updated);
-    this.saveToStorage(updated);
+  async deleteRoutine(id: string) {
+    const routineDoc = doc(this.firestore, `routines/${id}`);
+    await deleteDoc(routineDoc);
   }
 
-  deleteRoutine(id: string) {
-    const updated = this.getRoutines().filter(r => r.id !== id);
-    this.routinesSubject.next(updated);
-    this.saveToStorage(updated);
+  async renameRoutine(id: string, newName: string) {
+    const routineDoc = doc(this.firestore, `routines/${id}`);
+    await updateDoc(routineDoc, { name: newName });
   }
 
-  renameRoutine(id: string, newName: string) {
-    const current = this.getRoutines();
-    const routine = current.find(r => r.id === id);
-    if (routine) {
-        routine.name = newName;
-        this.routinesSubject.next([...current]);
-        this.saveToStorage(current);
-    }
-  }
+  // --- CREACIÓN DE RUTINAS POR DEFECTO ---
 
-  // --- PERSISTENCIA SEGURA (SSR) ---
-
-  private saveToStorage(routines: Routine[]) {
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem('my_routines', JSON.stringify(routines));
-    }
-  }
-
-  private loadRoutines() {
-    if (isPlatformBrowser(this.platformId)) {
-      const saved = localStorage.getItem('my_routines');
-      if (saved) {
-        try {
-          this.routinesSubject.next(JSON.parse(saved));
-        } catch (e) {
-          console.error('Error cargando rutinas', e);
-        }
+  async createDefaultRoutines(userId: string) {
+    const defaultRoutines = [
+      {
+        name: 'Día de Upper (Torso)',
+        description: 'Entrenamiento completo de pecho, espalda y hombros.',
+        userId: userId,
+        exercises: [],
+        createdAt: new Date()
+      },
+      {
+        name: 'Día de Lower (Pierna)',
+        description: 'Entrenamiento completo de cuádriceps, glúteos y femoral.',
+        userId: userId,
+        exercises: [],
+        createdAt: new Date()
       }
+    ];
+
+    // Guardamos cada rutina en la colección de Firestore
+    for (const routine of defaultRoutines) {
+      await addDoc(this.routinesCollection, routine);
     }
   }
 }

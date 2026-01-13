@@ -47,8 +47,7 @@ export class RoutineCreateComponent implements OnInit {
     
     sets.push({
       type: 'normal',
-      reps: lastSet ? lastSet.reps : 10,
-      // CAMBIO: Ya no copiamos ni inicializamos weight
+      reps: lastSet ? lastSet.reps : 10, weight: 0
     });
   }
 

@@ -240,10 +240,16 @@ export class WorkoutService {
     let exercises: WorkoutExercise[] = [];
     if (routine) {
       exercises = routine.exercises.map(rex => ({
-        tempId: Date.now().toString() + Math.random(),
+        tempId: crypto.randomUUID(), // o el generador que uses
         exercise: rex.exercise,
-        sets: rex.sets.map((s, i) => ({ id: i + 1, type: s.type, weight: s.weight || null, reps: s.reps || null, completed: false })),
-        notes: rex.notes
+        sets: rex.sets.map((s, index) => ({
+          id: index + 1,
+          type: s.type as any, // <--- Añade "as any" o el tipo específico para validar
+          weight: s.weight || 0,
+          reps: s.reps || 0,
+          completed: false
+        })),
+        notes: rex.notes || ''
       }));
     }
     this.activeWorkout = { name: routine?.name || 'Entrenamiento Libre', startTime: new Date(), durationSeconds: 0, exercises, volume: 0 };
