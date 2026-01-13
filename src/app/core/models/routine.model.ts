@@ -3,7 +3,7 @@ import { Exercise } from './exercise.model';
 export interface RoutineSet {
   type: 'warmup' | 'normal' | 'failure' | 'drop';
   reps?: number;
-  weight?: number; // Peso objetivo (opcional)
+  weight?: number; 
 }
 
 export interface RoutineExercise {
@@ -16,5 +16,6 @@ export interface Routine {
   id: string;
   name: string;
   exercises: RoutineExercise[];
-  lastPerformed?: string; // Fecha relativa ej: "Hace 2 días"
+  // AGREGAMOS ESTA LÍNEA:
+  createdAt?: Date; 
 }
