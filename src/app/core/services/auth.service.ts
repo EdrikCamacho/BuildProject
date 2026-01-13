@@ -1,6 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Auth, authState, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, user } from '@angular/fire/auth'; // Añadido updateProfile
-import { Router } from '@angular/router';
+import { Auth, user, updateProfile, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateEmail } from '@angular/fire/auth';
 import { Observable } from 'rxjs';
 
 @Injectable({
@@ -8,50 +7,42 @@ import { Observable } from 'rxjs';
 })
 export class AuthService {
   private auth = inject(Auth);
-  private router = inject(Router);
-
-  // Observable para saber si el usuario está logueado en cualquier parte de la app
   user$ = user(this.auth);
 
-  constructor() {}
-
-  // Registro
-  async register(name: string, email: string, pass: string) {
-    try {
-      const credential = await createUserWithEmailAndPassword(this.auth, email, pass);
-      // Guardar el nombre del usuario (Display Name)
-      if (credential.user) {
-        await updateProfile(credential.user, { displayName: name });
-      }
-      return credential;
-    } catch (error) {
-      throw error;
-    }
+  get currentUser() {
+    return this.auth.currentUser;
   }
 
-  // Login
   async login(email: string, pass: string) {
     return signInWithEmailAndPassword(this.auth, email, pass);
   }
 
-  // Logout
-  async logout() {
-    await signOut(this.auth);
-    this.router.navigate(['/']);
+  // Registro: Espera 2 argumentos (email y password)
+  async register(email: string, pass: string) {
+    return createUserWithEmailAndPassword(this.auth, email, pass);
   }
 
+  // Perfil: Ahora solo pide 1 argumento (displayName)
   async updateUserData(displayName: string): Promise<void> {
     const currentUser = this.auth.currentUser;
     if (!currentUser) throw new Error("No hay usuario");
+    await updateProfile(currentUser, { 
+      displayName: displayName
+    });
+  }
 
+  async changeEmail(newEmail: string): Promise<void> {
+    const currentUser = this.auth.currentUser;
+    if (!currentUser) throw new Error("No hay usuario autenticado");
     try {
-      // Solo actualizamos el nombre (displayName)
-      await updateProfile(currentUser, {
-        displayName: displayName
-      });
+      await updateEmail(currentUser, newEmail);
     } catch (error) {
-      console.error("Error de Firebase:", error);
+      console.error("Error al actualizar email:", error);
       throw error;
     }
+  }
+
+  async logout(): Promise<void> {
+    await this.auth.signOut();
   }
 }

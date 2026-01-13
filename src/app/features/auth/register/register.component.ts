@@ -1,8 +1,8 @@
-import { Component, inject } from '@angular/core'; // Agregamos inject
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../../core/services/auth.service'; // Importar servicio
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-register',
@@ -11,50 +11,59 @@ import { AuthService } from '../../../core/services/auth.service'; // Importar s
   templateUrl: './register.component.html'
 })
 export class RegisterComponent {
-  private authService = inject(AuthService); // Inyectar servicio
+  private authService = inject(AuthService);
   private router = inject(Router);
 
-  registerData = { name: '', email: '', password: '', confirmPassword: '' };
-  showPassword = false;
-  showConfirmPassword = false;
-  submitted = false;
-  errorMessage = ''; // Para mostrar errores en el HTML
+  registerData = {
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '' // Añadido para el HTML
+  };
+  
+  loading = false;
+  submitted = false; // Añadido para las validaciones del HTML
+  showPassword = false; // Añadido para el icono del ojo
+  showConfirmPassword = false; // Añadido para el icono del ojo
 
-  // Cambiamos a async para esperar a Firebase
+  togglePassword() {
+    this.showPassword = !this.showPassword;
+  }
+
+  toggleConfirmPassword() {
+    this.showConfirmPassword = !this.showConfirmPassword;
+  }
+
+  // Cambiado de onSubmit a onRegister para coincidir con tu HTML
   async onRegister() {
     this.submitted = true;
-    this.errorMessage = '';
 
-    // Validaciones básicas (se mantienen igual)...
-    if (!this.registerData.name || !this.registerData.email || !this.registerData.password || !this.registerData.confirmPassword) return;
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(this.registerData.email)) return; 
-    if (this.registerData.password.length < 6) return;
+    // Validación básica de coincidencia
     if (this.registerData.password !== this.registerData.confirmPassword) {
-      this.errorMessage = 'Las contraseñas no coinciden';
       return;
     }
 
-    // --- Lógica de Firebase ---
+    if (!this.registerData.name || !this.registerData.email || !this.registerData.password) {
+      return;
+    }
+
+    this.loading = true;
     try {
-      await this.authService.register(
-        this.registerData.name,
-        this.registerData.email,
+      const credential = await this.authService.register(
+        this.registerData.email, 
         this.registerData.password
       );
-      console.log('Usuario registrado con éxito');
-      this.router.navigate(['/onboarding']); // Redirigir al terminar
-    } catch (error: any) {
-      console.error('Error en registro:', error);
-      // Manejo básico de errores de Firebase
-      if (error.code === 'auth/email-already-in-use') {
-        this.errorMessage = 'Este correo ya está registrado.';
-      } else {
-        this.errorMessage = 'Ocurrió un error. Intenta nuevamente.';
+      
+      if (credential.user) {
+        await this.authService.updateUserData(this.registerData.name);
       }
+      
+      this.router.navigate(['/dashboard']);
+    } catch (error: any) {
+      console.error("Error en registro:", error);
+      alert("Error al crear la cuenta: " + error.message);
+    } finally {
+      this.loading = false;
     }
   }
-
-  togglePassword() { this.showPassword = !this.showPassword; }
-  toggleConfirmPassword() { this.showConfirmPassword = !this.showConfirmPassword; }
 }

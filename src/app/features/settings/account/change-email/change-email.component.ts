@@ -1,45 +1,41 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, Router } from '@angular/router';
-import { FormsModule } from '@angular/forms'; // Necesario para los inputs
+import { FormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-change-email',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './change-email.component.html'
 })
-export class ChangeEmailComponent implements OnInit {
-  // Datos del formulario
-  form = {
-    currentEmail: '',
-    newEmail: '',
-    password: ''
-  };
+export class ChangeEmailComponent {
+  private authService = inject(AuthService);
+  private router = inject(Router);
 
-  constructor(private router: Router) {}
+  newEmail: string = '';
+  loading: boolean = false;
 
-  ngOnInit() {
-    // Aquí cargarías el email real del usuario desde tu servicio de autenticación
-    this.form.currentEmail = 'usuario@ejemplo.com'; 
-  }
-
-  save() {
-    // Validación básica
-    if (!this.form.newEmail || !this.form.password) {
-      alert('Por favor, introduce el nuevo correo y tu contraseña para confirmar.');
+  async saveEmail() {
+    if (!this.newEmail || !this.newEmail.includes('@')) {
+      alert('Por favor, ingresa un correo electrónico válido.');
       return;
     }
 
-    if (this.form.newEmail === this.form.currentEmail) {
-       alert('El nuevo correo debe ser diferente al actual.');
-       return;
+    this.loading = true;
+    try {
+      await this.authService.changeEmail(this.newEmail);
+      alert('Correo electrónico actualizado correctamente.');
+      this.router.navigate(['/settings/account']);
+    } catch (error: any) {
+      if (error.code === 'auth/requires-recent-login') {
+        alert('Por seguridad, debes cerrar sesión y volver a entrar para realizar este cambio.');
+      } else {
+        alert('Error al actualizar: ' + error.message);
+      }
+    } finally {
+      this.loading = false;
     }
-
-    console.log('Intentando cambiar email...', this.form);
-    // Aquí iría la llamada al backend para verificar contraseña y actualizar email
-    
-    alert('Se ha enviado un enlace de verificación a tu nuevo correo.');
-    this.router.navigate(['/settings/account']);
   }
 }
