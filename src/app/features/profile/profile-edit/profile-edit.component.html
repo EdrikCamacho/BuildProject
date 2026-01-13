@@ -22,20 +22,22 @@
         </a>
         <h1 class="font-bold text-lg text-white">Editar Perfil</h1>
       </div>
-      <button (click)="save()" class="text-brand-primary font-bold text-sm px-2">
-        Guardar
+      <button (click)="saveProfile()" [disabled]="loading" class="text-brand-primary font-bold text-sm px-2 disabled:opacity-50">
+        {{ loading ? '...' : 'Guardar' }}
       </button>
     </header>
 
     <div class="flex-1 overflow-y-auto p-6 md:p-8 pb-24">
       
       <div class="flex flex-col items-center mb-8">
-        <div (click)="triggerPhotoUpload()" class="relative group cursor-pointer">
+        <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/*" class="hidden">
+        
+        <div (click)="fileInput.click()" class="relative group cursor-pointer">
           <div class="w-32 h-32 md:w-40 md:h-40 bg-brand-surface border-4 border-brand-surface-light rounded-full flex items-center justify-center overflow-hidden shadow-2xl hover:border-brand-primary transition-colors relative">
             
-            <img *ngIf="previewImage" [src]="previewImage" class="w-full h-full object-cover" alt="Foto de perfil">
+            <img *ngIf="photoURL" [src]="photoURL" class="w-full h-full object-cover" alt="Foto de perfil">
             
-            <div *ngIf="!previewImage" class="flex flex-col items-center text-brand-text-muted group-hover:text-brand-primary transition-colors">
+            <div *ngIf="!photoURL" class="flex flex-col items-center text-brand-text-muted group-hover:text-brand-primary transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-10 h-10 mb-1"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" /></svg>
             </div>
 
@@ -50,7 +52,7 @@
       <div class="max-w-md mx-auto space-y-6">
         <div>
           <label for="name" class="block text-sm font-bold text-brand-text-muted mb-2 uppercase tracking-wider">Nombre</label>
-          <input type="text" id="name" [(ngModel)]="user.name" name="name" 
+          <input type="text" id="name" [(ngModel)]="displayName" name="name" 
             class="w-full bg-brand-surface border border-brand-surface-light text-white rounded-xl py-4 px-4 focus:ring-2 focus:ring-brand-primary focus:border-transparent outline-none placeholder-gray-600 transition-all text-lg"
             placeholder="Tu nombre">
         </div>

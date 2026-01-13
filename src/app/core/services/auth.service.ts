@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, user, updateProfile } from '@angular/fire/auth';
+import { Auth, authState, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, user } from '@angular/fire/auth'; // Añadido updateProfile
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 
@@ -38,5 +38,20 @@ export class AuthService {
   async logout() {
     await signOut(this.auth);
     this.router.navigate(['/']);
+  }
+
+  async updateUserData(displayName: string, photoURL: string | null): Promise<void> {
+    const currentUser = this.auth.currentUser;
+    if (!currentUser) throw new Error("No hay usuario");
+
+    try {
+      await updateProfile(currentUser, {
+        displayName: displayName,
+        photoURL: photoURL
+      });
+    } catch (error) {
+      console.error("Error de Firebase:", error);
+      throw error;
+    }
   }
 }
