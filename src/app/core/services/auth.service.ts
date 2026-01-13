@@ -6,7 +6,8 @@ import {
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
   updateEmail,
-  updatePassword // Se añadió esta importación
+  updatePassword,
+  deleteUser 
 } from '@angular/fire/auth';
 import { Observable } from 'rxjs';
 
@@ -56,6 +57,17 @@ export class AuthService {
       await updatePassword(currentUser, newPass);
     } catch (error) {
       console.error("Error al actualizar contraseña:", error);
+      throw error;
+    }
+  }
+
+  async deleteAccount(): Promise<void> {
+    const currentUser = this.auth.currentUser;
+    if (!currentUser) throw new Error("No hay usuario autenticado");
+    try {
+      await deleteUser(currentUser);
+    } catch (error) {
+      console.error("Error al eliminar cuenta:", error);
       throw error;
     }
   }
