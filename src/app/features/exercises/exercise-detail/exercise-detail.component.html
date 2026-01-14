@@ -43,12 +43,12 @@
 
         <div *ngIf="activeTab === 'about'" class="space-y-8 animate-fade-in">
           
-          <section *ngIf="exercise.records?.length">
+          <section *ngIf="realRecords.length">
             <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
               <span class="text-yellow-500">🏆</span> Récords Personales
             </h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div *ngFor="let record of exercise.records" class="bg-brand-surface p-4 rounded-xl border border-brand-surface-light flex items-center gap-4 hover:border-yellow-500/30 transition-colors">
+              <div *ngFor="let record of realRecords" class="bg-brand-surface p-4 rounded-xl border border-brand-surface-light flex items-center gap-4 hover:border-yellow-500/30 transition-colors">
                 <div class="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center text-yellow-500">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.504-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 002.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.485c.982.143 1.954.317 2.916.52a6.003 6.003 0 01-5.396 4.972m0 0a6.726 6.726 0 01-2.748 1.35m0 0a6.772 6.772 0 01-3.044 0" /></svg>
                 </div>
@@ -91,9 +91,9 @@
         </div>
 
         <div *ngIf="activeTab === 'history'" class="space-y-6 animate-fade-in">
-          <div *ngIf="exercise.history?.length; else noHistory">
+          <div *ngIf="realHistory.length; else noHistory">
             <div class="relative border-l-2 border-brand-surface-light ml-3 space-y-8">
-              <div *ngFor="let log of exercise.history" class="relative pl-8">
+              <div *ngFor="let log of realHistory" class="relative pl-8">
                 <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-brand-black border-2 border-brand-primary"></div>
                 <h3 class="text-white font-bold text-lg mb-2">{{ log.date }}</h3>
                 <div class="bg-brand-surface rounded-xl border border-brand-surface-light overflow-hidden">
@@ -119,15 +119,39 @@
           </ng-template>
         </div>
 
-        <div *ngIf="activeTab === 'charts'" class="animate-fade-in flex flex-col items-center justify-center py-20 text-brand-text-muted">
-          <div class="w-full h-48 bg-brand-surface border border-brand-surface-light rounded-xl flex items-end justify-between p-4 mb-4">
-             <div class="w-8 bg-brand-surface-light h-1/4 rounded-t"></div>
-             <div class="w-8 bg-brand-surface-light h-2/4 rounded-t"></div>
-             <div class="w-8 bg-brand-primary/50 h-3/4 rounded-t"></div>
-             <div class="w-8 bg-brand-primary h-full rounded-t shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
-             <div class="w-8 bg-brand-surface-light h-2/3 rounded-t"></div>
+        <div *ngIf="activeTab === 'charts'" class="animate-fade-in">
+          <div *ngIf="chartData.volume.length > 0 || chartData.oneRepMax.length > 0; else noChartData" class="space-y-8">
+
+            <div class="bg-brand-surface p-6 rounded-2xl border border-brand-surface-light">
+              <div class="flex justify-between items-start mb-6">
+                <div><p class="text-brand-text-muted text-[10px] uppercase tracking-wider font-bold mb-1">Tendencia de Volumen</p><h3 class="text-2xl font-bold text-white tracking-tight">Progreso Diario</h3></div>
+                <div class="p-2 bg-brand-primary/10 rounded-lg text-brand-primary"><svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg></div>
+              </div>
+              <div class="h-32 flex items-end gap-2 md:gap-4">
+                <div *ngFor="let h of chartData.volume" class="flex-1 bg-brand-primary/20 rounded-t-md hover:bg-brand-primary transition-all duration-300 cursor-pointer relative group/bar" [style.height.%]="h"></div>
+              </div>
+              <p class="text-xs text-brand-text-muted mt-3 text-center">Últimas {{ chartData.volume.length }} sesiones</p>
+            </div>
+
+            <div class="bg-brand-surface p-6 rounded-2xl border border-brand-surface-light">
+              <div class="flex justify-between items-start mb-6">
+                <div><p class="text-brand-text-muted text-[10px] uppercase tracking-wider font-bold mb-1">Tendencia de 1RM</p><h3 class="text-2xl font-bold text-white tracking-tight">Fuerza Estimada</h3></div>
+                <div class="p-2 bg-purple-500/10 rounded-lg text-purple-500"><svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg></div>
+              </div>
+              <div class="h-32 flex items-end gap-2 md:gap-4">
+                <div *ngFor="let h of chartData.oneRepMax" class="flex-1 bg-purple-500/20 rounded-t-md hover:bg-purple-500 transition-all duration-300 cursor-pointer relative group/bar" [style.height.%]="h"></div>
+              </div>
+              <p class="text-xs text-brand-text-muted mt-3 text-center">Últimas {{ chartData.oneRepMax.length }} sesiones</p>
+            </div>
+
           </div>
-          <p class="text-sm">Próximamente: Gráficas detalladas de 1RM y Volumen.</p>
+          <ng-template #noChartData>
+            <div class="flex flex-col items-center justify-center py-20 text-brand-text-muted">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16 mb-4 opacity-30"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+              <p>No hay suficientes datos para mostrar gráficas.</p>
+              <p class="text-sm mt-2">Completa más entrenamientos para ver tu progreso.</p>
+            </div>
+          </ng-template>
         </div>
 
       </div>
