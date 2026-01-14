@@ -37,14 +37,13 @@ export class RoutineService {
         // --- SOLUCIÓN AL ERROR DE SDK Y CONTEXTO ---
         // runInInjectionContext asegura que Firebase reconozca la instancia de la DB
         return runInInjectionContext(this.injector, () => {
-          const colRef = collection(this.firestore, 'routines');
-          
+          const colRef = collection(this.firestore, `users/${user.uid}/routines`);
+
           const q = query(
-            colRef, 
-            where('userId', '==', user.uid),
+            colRef,
             orderBy('createdAt', 'desc')
           );
-          
+
           return (collectionData(q, { idField: 'id' }) as Observable<Routine[]>).pipe(
             catchError(err => {
               console.error("ERROR DE FIREBASE AL CARGAR:", err);
@@ -112,10 +111,10 @@ export class RoutineService {
     if (!user) throw new Error('Usuario no identificado');
 
     this.draftRoutine.userId = user.uid;
-    const colRef = collection(this.firestore, 'routines');
+    const colRef = collection(this.firestore, `users/${user.uid}/routines`);
 
     if (this.draftRoutine.id) {
-      const routineDoc = doc(this.firestore, `routines/${this.draftRoutine.id}`);
+      const routineDoc = doc(this.firestore, `users/${user.uid}/routines/${this.draftRoutine.id}`);
       const { id, ...data } = this.draftRoutine;
       await updateDoc(routineDoc, { ...data });
     } else {
@@ -128,19 +127,25 @@ export class RoutineService {
   // --- MÉTODOS CRUD ---
 
   async deleteRoutine(id: string) {
-    const routineDoc = doc(this.firestore, `routines/${id}`);
+    const user = this.authService.currentUser;
+    if (!user) throw new Error('Usuario no identificado');
+
+    const routineDoc = doc(this.firestore, `users/${user.uid}/routines/${id}`);
     await deleteDoc(routineDoc);
   }
 
   async renameRoutine(id: string, newName: string) {
-    const routineDoc = doc(this.firestore, `routines/${id}`);
+    const user = this.authService.currentUser;
+    if (!user) throw new Error('Usuario no identificado');
+
+    const routineDoc = doc(this.firestore, `users/${user.uid}/routines/${id}`);
     await updateDoc(routineDoc, { name: newName });
   }
 
   // --- CREACIÓN DE RUTINAS POR DEFECTO (HIPERTROFIA) ---
 
   async createDefaultRoutines(userId: string) {
-    const colRef = collection(this.firestore, 'routines');
+    const colRef = collection(this.firestore, `users/${userId}/routines`);
     const defaultRoutines = [
       {
         name: 'Día de Upper (Torso)',
