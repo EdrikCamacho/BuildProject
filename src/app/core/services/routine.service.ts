@@ -1,4 +1,5 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, Injector, runInInjectionContext } from '@angular/core';
+// Importamos todo estrictamente de @angular/fire/firestore
 import { 
   Firestore, 
   collection, 
@@ -9,9 +10,10 @@ import {
   doc, 
   deleteDoc, 
   updateDoc,
-  orderBy
+  orderBy 
 } from '@angular/fire/firestore';
-import { BehaviorSubject, Observable, of, switchMap, tap } from 'rxjs';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { switchMap, tap, catchError } from 'rxjs/operators';
 import { Routine, RoutineExercise } from '../models/routine.model';
 import { Exercise } from '../models/exercise.model';
 import { AuthService } from './auth.service';
@@ -22,33 +24,49 @@ import { AuthService } from './auth.service';
 export class RoutineService {
   private firestore = inject(Firestore);
   private authService = inject(AuthService);
+  private injector = inject(Injector); // Necesario para mantener el contexto de Firebase
   
-  private routinesCollection = collection(this.firestore, 'routines');
-
   private routinesSubject = new BehaviorSubject<Routine[]>([]);
   
-  // Observable que se actualiza solo con las rutinas del usuario actual
+  // Observable principal para el Dashboard
   public routines$ = this.authService.user$.pipe(
     switchMap(user => {
       if (user) {
-        // Filtramos por userId para que nadie vea rutinas de otros
-        const q = query(
-          this.routinesCollection, 
-          where('userId', '==', user.uid),
-          orderBy('createdAt', 'desc')
-        );
-        return collectionData(q, { idField: 'id' }) as Observable<Routine[]>;
+        console.log('Buscando rutinas para el UID:', user.uid);
+        
+        // --- SOLUCIÓN AL ERROR DE SDK Y CONTEXTO ---
+        // runInInjectionContext asegura que Firebase reconozca la instancia de la DB
+        return runInInjectionContext(this.injector, () => {
+          const colRef = collection(this.firestore, 'routines');
+          
+          const q = query(
+            colRef, 
+            where('userId', '==', user.uid),
+            orderBy('createdAt', 'desc')
+          );
+          
+          return (collectionData(q, { idField: 'id' }) as Observable<Routine[]>).pipe(
+            catchError(err => {
+              console.error("ERROR DE FIREBASE AL CARGAR:", err);
+              return of([]);
+            })
+          );
+        });
       } else {
         return of([]);
       }
     }),
-    tap(routines => this.routinesSubject.next(routines))
+    tap(routines => {
+      console.log('Rutinas sincronizadas con éxito:', routines);
+      this.routinesSubject.next(routines);
+    })
   );
 
   public draftRoutine: Routine | null = null;
 
   constructor() {}
 
+  // --- MÉTODOS DE ACCESO ---
   getRoutines(): Routine[] {
     return this.routinesSubject.value;
   }
@@ -57,7 +75,7 @@ export class RoutineService {
     return this.routinesSubject.value.find(r => r.id === id);
   }
 
-  // --- GESTIÓN DE BORRADOR ---
+  // --- GESTIÓN DE BORRADOR (DRAFT) ---
   
   initDraft(id?: string) {
     if (id) {
@@ -75,25 +93,6 @@ export class RoutineService {
     }
   }
 
-  async saveDraft() {
-    if (!this.draftRoutine) return;
-
-    const user = this.authService.currentUser;
-    if (!user) throw new Error('Usuario no identificado');
-
-    this.draftRoutine.userId = user.uid;
-
-    if (this.draftRoutine.id) {
-      const routineDoc = doc(this.firestore, `routines/${this.draftRoutine.id}`);
-      const { id, ...data } = this.draftRoutine;
-      await updateDoc(routineDoc, { ...data });
-    } else {
-      await addDoc(this.routinesCollection, this.draftRoutine);
-    }
-
-    this.draftRoutine = null;
-  }
-
   addExercisesToDraft(exercises: Exercise[]) {
     if (!this.draftRoutine) this.initDraft();
 
@@ -104,6 +103,26 @@ export class RoutineService {
     }));
 
     this.draftRoutine!.exercises = [...this.draftRoutine!.exercises, ...newExercises];
+  }
+
+  async saveDraft() {
+    if (!this.draftRoutine) return;
+
+    const user = this.authService.currentUser;
+    if (!user) throw new Error('Usuario no identificado');
+
+    this.draftRoutine.userId = user.uid;
+    const colRef = collection(this.firestore, 'routines');
+
+    if (this.draftRoutine.id) {
+      const routineDoc = doc(this.firestore, `routines/${this.draftRoutine.id}`);
+      const { id, ...data } = this.draftRoutine;
+      await updateDoc(routineDoc, { ...data });
+    } else {
+      await addDoc(colRef, this.draftRoutine);
+    }
+
+    this.draftRoutine = null;
   }
 
   // --- MÉTODOS CRUD ---
@@ -118,9 +137,10 @@ export class RoutineService {
     await updateDoc(routineDoc, { name: newName });
   }
 
-  // --- CREACIÓN DE RUTINAS POR DEFECTO ---
+  // --- CREACIÓN DE RUTINAS POR DEFECTO (HIPERTROFIA) ---
 
   async createDefaultRoutines(userId: string) {
+    const colRef = collection(this.firestore, 'routines');
     const defaultRoutines = [
       {
         name: 'Día de Upper (Torso)',
@@ -129,7 +149,7 @@ export class RoutineService {
         createdAt: new Date(),
         exercises: [
           {
-            exercise: { id: '1', name: 'Press de Banca', muscleGroup: 'Pecho', category: 'Fuerza' }, // Ajustar según tu ExerciseService
+            exercise: { id: '1', name: 'Press de Banca', muscleGroup: 'Pecho', category: 'Fuerza' },
             sets: [
               { type: 'normal', reps: 10, weight: 0 },
               { type: 'normal', reps: 10, weight: 0 },
@@ -190,13 +210,13 @@ export class RoutineService {
       }
     ];
 
-    // Guardamos cada rutina en la colección de Firestore vinculada al usuario
     for (const routine of defaultRoutines) {
       try {
-        await addDoc(this.routinesCollection, routine);
+        await addDoc(colRef, routine);
       } catch (error) {
         console.error("Error al crear rutina por defecto:", error);
       }
     }
+    console.log('Rutinas iniciales creadas con éxito para el usuario.');
   }
 }
